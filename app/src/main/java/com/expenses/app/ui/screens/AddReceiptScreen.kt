@@ -20,6 +20,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
 
+private const val RECEIPT_FILENAME_PREFIX = "receipt_"
+private const val RECEIPT_FILE_EXTENSION = ".jpg"
+import java.io.File
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun AddReceiptScreen(
@@ -77,8 +81,8 @@ fun AddReceiptScreen(
                     if (cameraPermissionState.hasPermission) {
                         // Create a file for the photo
                         val photoFile = File.createTempFile(
-                            "receipt_",
-                            ".jpg",
+                            RECEIPT_FILENAME_PREFIX,
+                            RECEIPT_FILE_EXTENSION,
                             context.getExternalFilesDir(null)
                         )
                         photoUri = FileProvider.getUriForFile(

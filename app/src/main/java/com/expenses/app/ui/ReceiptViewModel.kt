@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.expenses.app.data.*
+import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
 import kotlinx.coroutines.flow.*
@@ -35,18 +36,12 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     getApplication<Application>().contentResolver
                 )
 
-                val defaultCurrency = try {
-                    java.util.Currency.getInstance(java.util.Locale.getDefault()).currencyCode
-                } catch (e: Exception) {
-                    "USD"
-                }
-
                 val receipt = Receipt(
                     receiptDate = ocrResult.date ?: System.currentTimeMillis(),
                     merchant = ocrResult.merchant,
                     totalAmount = ocrResult.totalAmount ?: 0.0,
                     vatAmount = ocrResult.vatAmount,
-                    currency = ocrResult.currency ?: defaultCurrency,
+                    currency = ocrResult.currency ?: CurrencyUtils.getDefaultCurrency(),
                     category = "Uncategorized",
                     notes = null,
                     ocrRawText = ocrResult.rawText,
