@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Expenses &amp; Receipts</string>
+    <string name="add_receipt">Add Receipt</string>
+    <string name="upload_receipt">Upload Receipt</string>
+    <string name="recent_receipts">Recent Receipts</string>
+    <string name="view_reports">View Reports</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="merchant">Merchant</string>
+    <string name="date">Date</string>
+    <string name="total_amount">Total Amount</string>
+    <string name="vat_amount">VAT Amount</string>
+    <string name="currency">Currency</string>
+    <string name="category">Category</string>
+    <string name="notes">Notes</string>
+    <string name="tags">Tags</string>
+    <string name="capture_receipt">Capture Receipt</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="select_from_gallery">Select from Gallery</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="date_range">Date Range</string>
+    <string name="from_date">From Date</string>
+    <string name="to_date">To Date</string>
+    <string name="filter">Filter</string>
+    <string name="no_receipts">No receipts found</string>
+    <string name="camera_permission_required">Camera permission is required to capture receipts</string>
+    <string name="storage_permission_required">Storage permission is required to access files</string>
+</resources>
