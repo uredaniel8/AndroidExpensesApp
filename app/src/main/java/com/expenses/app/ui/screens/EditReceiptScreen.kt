@@ -45,20 +45,23 @@ fun EditReceiptScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        receipt?.let {
-                            val updatedReceipt = it.copy(
-                                merchant = merchant.takeIf { it.isNotBlank() },
-                                totalAmount = totalAmount.toDoubleOrNull() ?: 0.0,
-                                vatAmount = vatAmount.toDoubleOrNull(),
-                                currency = currency,
-                                category = category,
-                                notes = notes.takeIf { it.isNotBlank() }
-                            )
-                            onSave(updatedReceipt)
-                        }
-                        onBack()
-                    }) {
+                    IconButton(
+                        onClick = {
+                            receipt?.let {
+                                val updatedReceipt = it.copy(
+                                    merchant = merchant.takeIf { it.isNotBlank() },
+                                    totalAmount = totalAmount.toDoubleOrNull() ?: 0.0,
+                                    vatAmount = vatAmount.toDoubleOrNull(),
+                                    currency = currency,
+                                    category = category,
+                                    notes = notes.takeIf { it.isNotBlank() }
+                                )
+                                onSave(updatedReceipt)
+                                onBack()
+                            }
+                        },
+                        enabled = receipt != null
+                    ) {
                         Icon(Icons.Default.Save, contentDescription = "Save")
                     }
                 }

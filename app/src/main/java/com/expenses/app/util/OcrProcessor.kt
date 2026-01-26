@@ -147,7 +147,12 @@ class OcrProcessor {
                 }
             }
         }
-        return "USD" // Default
+        // Default currency based on device locale
+        return try {
+            java.util.Currency.getInstance(java.util.Locale.getDefault()).currencyCode
+        } catch (e: Exception) {
+            "USD" // Fallback if locale currency cannot be determined
+        }
     }
 
     fun release() {
