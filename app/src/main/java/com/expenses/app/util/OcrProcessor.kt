@@ -7,8 +7,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class OcrProcessor {
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)

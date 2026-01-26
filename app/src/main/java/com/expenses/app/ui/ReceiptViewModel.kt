@@ -35,12 +35,18 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     getApplication<Application>().contentResolver
                 )
 
+                val defaultCurrency = try {
+                    java.util.Currency.getInstance(java.util.Locale.getDefault()).currencyCode
+                } catch (e: Exception) {
+                    "USD"
+                }
+
                 val receipt = Receipt(
                     receiptDate = ocrResult.date ?: System.currentTimeMillis(),
                     merchant = ocrResult.merchant,
                     totalAmount = ocrResult.totalAmount ?: 0.0,
                     vatAmount = ocrResult.vatAmount,
-                    currency = ocrResult.currency ?: "USD",
+                    currency = ocrResult.currency ?: defaultCurrency,
                     category = "Uncategorized",
                     notes = null,
                     ocrRawText = ocrResult.rawText,
