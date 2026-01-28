@@ -1,6 +1,7 @@
 package com.expenses.app.ui.screens
 
 import android.Manifest
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,12 +18,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
 
 private const val RECEIPT_FILENAME_PREFIX = "receipt_"
 private const val RECEIPT_FILE_EXTENSION = ".jpg"
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -32,11 +33,9 @@ fun AddReceiptScreen(
 ) {
     val context = LocalContext.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
-    
-    // Camera permission
+
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-    
-    // Camera launcher
+
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -45,8 +44,7 @@ fun AddReceiptScreen(
             onBack()
         }
     }
-    
-    // Gallery launcher
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -72,68 +70,49 @@ fun AddReceiptScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+
             Button(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    if (cameraPermissionState.hasPermission) {
-                        // Create a file for the photo
-                        val photoFile = File.createTempFile(
-                            RECEIPT_FILENAME_PREFIX,
-                            RECEIPT_FILE_EXTENSION,
-                            context.getExternalFilesDir(null)
-                        )
+                    val granted = cameraPermissionState.status is PermissionStatus.Granted
+                    if (granted) {
+                        val file = createTempReceiptFile(context)
                         photoUri = FileProvider.getUriForFile(
                             context,
-                            "${context.packageName}.fileprovider",
-                            photoFile
+                            "${context.packageName}.provider",
+                            file
                         )
                         cameraLauncher.launch(photoUri)
                     } else {
                         cameraPermissionState.launchPermissionRequest()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Take Photo")
                 }
+            ) {
+                Icon(Icons.Default.CameraAlt, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Take Photo")
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    galleryLauncher.launch("image/*")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { galleryLauncher.launch("image/*") }
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.Image,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Select from Gallery")
-                }
+                Icon(Icons.Default.Image, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Choose from Gallery")
             }
         }
     }
+}
+
+private fun createTempReceiptFile(context: Context): File {
+    return File.createTempFile(
+        RECEIPT_FILENAME_PREFIX,
+        RECEIPT_FILE_EXTENSION,
+        context.cacheDir
+    )
 }
