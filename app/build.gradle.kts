@@ -103,6 +103,13 @@ dependencies {
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
     
+    // Microsoft Graph SDK for OneDrive
+    implementation("com.microsoft.graph:microsoft-graph:6.7.0")
+    implementation("com.microsoft.identity.client:msal:5.0.0")
+    
+    // OkHttp for HTTP requests
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
     // Debugging
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

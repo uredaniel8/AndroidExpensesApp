@@ -62,6 +62,9 @@ fun ExpensesApp() {
                 },
                 onViewReports = {
                     navController.navigate(Screen.Reports.route)
+                },
+                onSettings = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }
@@ -106,6 +109,9 @@ fun ExpensesApp() {
                         viewModel.deleteReceipt(receiptToDelete)
                     }
                 },
+                onUploadToOneDrive = { receiptToUpload ->
+                    viewModel.uploadToOneDrive(receiptToUpload)
+                },
                 onAddCategory = { categoryName ->
                     viewModel.addCategory(categoryName)
                 },
@@ -123,6 +129,15 @@ fun ExpensesApp() {
                     endDate = System.currentTimeMillis()
                 ),
                 onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onConfigureOneDrive = { accessToken, enabled ->
+                    viewModel.configureOneDrive(accessToken, enabled)
+                }
             )
         }
     }

@@ -6,7 +6,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,7 @@ fun EditReceiptScreen(
     onBack: () -> Unit,
     onSave: (Receipt) -> Unit,
     onDelete: (Receipt) -> Unit,
+    onUploadToOneDrive: (Receipt) -> Unit,
     onAddCategory: (String) -> Unit,
     onDeleteCategory: (String) -> Unit
 ) {
@@ -213,6 +216,18 @@ fun EditReceiptScreen(
                     .height(120.dp),
                 maxLines = 5
             )
+            
+            // Upload to OneDrive Button
+            receipt?.let {
+                Button(
+                    onClick = { onUploadToOneDrive(it) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Upload, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Upload to OneDrive")
+                }
+            }
 
             // OCR Confidence
             receipt?.ocrConfidence?.let { confidence ->

@@ -9,9 +9,11 @@ import com.expenses.app.data.ReceiptDatabase
 import com.expenses.app.data.ReceiptRepository
 import com.expenses.app.data.Category
 import com.expenses.app.data.CategoryRepository
+import com.expenses.app.data.ExportStatus
 import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
+import com.expenses.app.util.OneDriveService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +27,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val repository = ReceiptRepository(database.receiptDao())
     private val categoryRepository = CategoryRepository(database.categoryDao())
     private val ocrProcessor = OcrProcessor()
+    private val oneDriveService = OneDriveService(application)
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -37,6 +40,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+    
+    private val _uploadStatus = MutableStateFlow<String?>(null)
+    val uploadStatus: StateFlow<String?> = _uploadStatus.asStateFlow()
 
     init {
         // Initialize default categories
@@ -161,6 +167,101 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 _error.value = e.message ?: "Error deleting category"
             }
         }
+    }
+    
+    /**
+     * Configures OneDrive integration.
+     * 
+     * @param accessToken The OAuth access token for OneDrive
+     * @param enabled Whether OneDrive integration is enabled
+     */
+    fun configureOneDrive(accessToken: String, enabled: Boolean) {
+        oneDriveService.setConfig(
+            OneDriveService.OneDriveConfig(
+                accessToken = accessToken,
+                enabled = enabled
+            )
+        )
+        
+        if (enabled) {
+            viewModelScope.launch {
+                try {
+                    oneDriveService.ensureFoldersExist()
+                    _uploadStatus.value = "OneDrive configured successfully"
+                } catch (e: Exception) {
+                    _error.value = "Failed to configure OneDrive: ${e.message}"
+                }
+            }
+        }
+    }
+    
+    /**
+     * Uploads a receipt to OneDrive.
+     * 
+     * @param receipt The receipt to upload
+     */
+    fun uploadToOneDrive(receipt: Receipt) {
+        viewModelScope.launch {
+            try {
+                _isProcessing.value = true
+                _uploadStatus.value = "Uploading to OneDrive..."
+                
+                if (!oneDriveService.isConfigured()) {
+                    _error.value = "OneDrive is not configured. Please configure OneDrive in settings."
+                    _uploadStatus.value = null
+                    _isProcessing.value = false
+                    return@launch
+                }
+                
+                // Use stored URI or original URI
+                val imageUri = receipt.storedUri ?: receipt.originalUri
+                if (imageUri == null) {
+                    _error.value = "No image found for this receipt"
+                    _uploadStatus.value = null
+                    _isProcessing.value = false
+                    return@launch
+                }
+                
+                val result = oneDriveService.uploadReceipt(receipt, imageUri)
+                
+                if (result.isSuccess) {
+                    val oneDrivePath = result.getOrNull()
+                    _uploadStatus.value = "Successfully uploaded to OneDrive"
+                    
+                    // Update receipt with OneDrive path and export status
+                    val updatedReceipt = receipt.copy(
+                        exportFolderUri = oneDrivePath,
+                        exportStatus = ExportStatus.EXPORTED,
+                        lastExportAttemptAt = System.currentTimeMillis()
+                    )
+                    repository.updateReceipt(updatedReceipt)
+                    
+                    // Clear status after a delay
+                    kotlinx.coroutines.delay(3000)
+                    _uploadStatus.value = null
+                } else {
+                    val error = result.exceptionOrNull()
+                    _error.value = "Upload failed: ${error?.message}"
+                    _uploadStatus.value = null
+                    
+                    // Update receipt with failed status
+                    val updatedReceipt = receipt.copy(
+                        exportStatus = ExportStatus.FAILED,
+                        lastExportAttemptAt = System.currentTimeMillis()
+                    )
+                    repository.updateReceipt(updatedReceipt)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error uploading to OneDrive"
+                _uploadStatus.value = null
+            } finally {
+                _isProcessing.value = false
+            }
+        }
+    }
+    
+    fun clearUploadStatus() {
+        _uploadStatus.value = null
     }
 
     override fun onCleared() {
