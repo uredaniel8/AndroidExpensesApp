@@ -24,6 +24,7 @@ fun EditReceiptScreen(
     categories: List<String>,
     onBack: () -> Unit,
     onSave: (Receipt) -> Unit,
+    onDelete: (Receipt) -> Unit,
     onAddCategory: (String) -> Unit,
     onDeleteCategory: (String) -> Unit
 ) {
@@ -38,6 +39,7 @@ fun EditReceiptScreen(
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var showDeleteCategoryDialog by remember { mutableStateOf(false) }
     var categoryToDelete by remember { mutableStateOf<String?>(null) }
+    var showDeleteReceiptDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -49,6 +51,12 @@ fun EditReceiptScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { showDeleteReceiptDialog = true },
+                        enabled = receipt != null
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete Receipt")
+                    }
                     IconButton(
                         onClick = {
                             receipt?.let {
@@ -298,6 +306,33 @@ fun EditReceiptScreen(
                     showDeleteCategoryDialog = false
                     categoryToDelete = null
                 }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Receipt Confirmation Dialog
+    if (showDeleteReceiptDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteReceiptDialog = false },
+            title = { Text("Delete Receipt?") },
+            text = { Text("This action cannot be undone. The receipt and its associated image will be permanently deleted.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        receipt?.let { 
+                            onDelete(it)
+                            onBack()
+                        }
+                        showDeleteReceiptDialog = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteReceiptDialog = false }) {
                     Text("Cancel")
                 }
             }

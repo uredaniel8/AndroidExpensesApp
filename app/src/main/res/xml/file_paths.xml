@@ -2,4 +2,5 @@
 <paths>
     <external-files-path name="my_images" path="Images/" />
     <external-files-path name="my_receipts" path="Receipts/" />
+    <cache-path name="cache" path="." />
 </paths>

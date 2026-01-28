@@ -101,6 +101,11 @@ fun ExpensesApp() {
                         viewModel.updateReceipt(updatedReceipt)
                     }
                 },
+                onDelete = { receiptToDelete ->
+                    scope.launch {
+                        viewModel.deleteReceipt(receiptToDelete)
+                    }
+                },
                 onAddCategory = { categoryName ->
                     viewModel.addCategory(categoryName)
                 },

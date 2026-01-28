@@ -81,12 +81,13 @@ fun AddReceiptScreen(
                     val granted = cameraPermissionState.status is PermissionStatus.Granted
                     if (granted) {
                         val file = createTempReceiptFile(context)
-                        photoUri = FileProvider.getUriForFile(
+                        val uri = FileProvider.getUriForFile(
                             context,
                             "${context.packageName}.provider",
                             file
                         )
-                        cameraLauncher.launch(photoUri)
+                        photoUri = uri
+                        cameraLauncher.launch(uri)
                     } else {
                         cameraPermissionState.launchPermissionRequest()
                     }

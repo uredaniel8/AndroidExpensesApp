@@ -111,6 +111,19 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun deleteReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
+                // Delete associated image files if they exist
+                receipt.storedUri?.let { storedUri ->
+                    try {
+                        val file = java.io.File(storedUri)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    } catch (e: Exception) {
+                        // Log but don't fail the delete operation
+                        e.printStackTrace()
+                    }
+                }
+                
                 repository.deleteReceipt(receipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error deleting receipt"
