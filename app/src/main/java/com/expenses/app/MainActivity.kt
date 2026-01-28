@@ -41,7 +41,18 @@ fun ExpensesApp() {
     val navController = rememberNavController()
     val viewModel: ReceiptViewModel = viewModel()
     val receipts by viewModel.receipts.collectAsState()
+    val lastProcessedReceiptId by viewModel.lastProcessedReceiptId.collectAsState()
     val scope = rememberCoroutineScope()
+    
+    // Navigate to edit screen when a new receipt is processed
+    LaunchedEffect(lastProcessedReceiptId) {
+        lastProcessedReceiptId?.let { receiptId ->
+            navController.navigate(Screen.EditReceipt.createRoute(receiptId)) {
+                popUpTo(Screen.Home.route)
+            }
+            viewModel.clearLastProcessedReceiptId()
+        }
+    }
 
     NavHost(
         navController = navController,

@@ -10,18 +10,32 @@ object FileUtils {
     
     fun generateFileName(
         date: Long,
-        merchant: String?,
-        category: String,
-        total: Double,
+        description: String?,
+        amount: Double,
         extension: String
     ): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.US)
         val dateStr = dateFormat.format(Date(date))
-        val merchantStr = merchant?.replace(Regex("[^a-zA-Z0-9]"), "_") ?: "Unknown"
-        val categoryStr = category.replace(Regex("[^a-zA-Z0-9]"), "_")
-        val totalStr = String.format("%.2f", total)
+        val descStr = description?.replace(Regex("[^a-zA-Z0-9\\s]"), "")?.trim()?.replace(Regex("\\s+"), " ") ?: "NoDescription"
+        val amountStr = String.format(Locale.US, "%.2f", amount)
         
-        return "${dateStr}__${merchantStr}__${categoryStr}__${totalStr}.${extension}"
+        return "${dateStr} - ${descStr} - ${amountStr}.${extension}"
+    }
+
+    fun getCategoryFolder(context: Context, category: String): File {
+        val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
+        val folder = if (category.equals("Fuel", ignoreCase = true)) {
+            File(baseFolder, "Fuel")
+        } else {
+            File(baseFolder, "Others")
+        }
+        if (!folder.exists()) {
+            val created = folder.mkdirs()
+            if (!created && !folder.exists()) {
+                throw IllegalStateException("Failed to create directory: ${folder.absolutePath}")
+            }
+        }
+        return folder
     }
 
     fun copyToExportFolder(

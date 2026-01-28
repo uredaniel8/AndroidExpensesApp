@@ -15,6 +15,7 @@ data class Receipt(
     val vatAmount: Double?,
     val currency: String,
     val category: String,
+    val description: String?,
     val notes: String?,
 
     val tags: List<String> = emptyList(),

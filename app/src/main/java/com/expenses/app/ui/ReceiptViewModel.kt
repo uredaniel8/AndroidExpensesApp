@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 
 class ReceiptViewModel(application: Application) : AndroidViewModel(application) {
     private val database = ReceiptDatabase.getDatabase(application)
@@ -30,6 +31,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _lastProcessedReceiptId = MutableStateFlow<String?>(null)
+    val lastProcessedReceiptId: StateFlow<String?> = _lastProcessedReceiptId.asStateFlow()
 
     fun processReceipt(imageUri: Uri) {
         viewModelScope.launch {
@@ -50,16 +54,17 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     vatAmount = ocrResult.vatAmount,
                     currency = ocrResult.currency ?: CurrencyUtils.getDefaultCurrency(),
                     category = "Uncategorized",
+                    description = null,
                     notes = null,
                     tags = emptyList(),
                     ocrRawText = ocrResult.rawText,
                     ocrConfidence = ocrResult.confidence,
-                    originalUri = imageUri.toString()
-                    // storedUri / renamedFileName / exportFolderUri default to null now ✅
+                    originalUri = imageUri.toString(),
+                    exportStatus = ExportStatus.NOT_EXPORTED  // Start as NOT_EXPORTED until user saves
                 )
 
                 repository.insertReceipt(receipt)
-
+                _lastProcessedReceiptId.value = receipt.id
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error processing receipt"
             } finally {
@@ -68,10 +73,56 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun clearLastProcessedReceiptId() {
+        _lastProcessedReceiptId.value = null
+    }
+
     fun updateReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
-                repository.updateReceipt(receipt)
+                // Save and rename the file based on category and new naming convention
+                val context = getApplication<Application>()
+                val updatedReceipt = if (receipt.originalUri != null || receipt.storedUri != null) {
+                    val sourceUri = Uri.parse(receipt.storedUri ?: receipt.originalUri)
+                    val extension = FileUtils.getFileExtension(sourceUri, context)
+                    val newFileName = FileUtils.generateFileName(
+                        receipt.receiptDate,
+                        receipt.description,
+                        receipt.totalAmount,
+                        extension
+                    )
+                    
+                    val categoryFolder = FileUtils.getCategoryFolder(context, receipt.category)
+                    val destFile = FileUtils.copyToExportFolder(
+                        context,
+                        sourceUri,
+                        categoryFolder.absolutePath,
+                        newFileName
+                    )
+                    
+                    // Delete old file if it exists and is different from the new one
+                    receipt.storedUri?.let { oldUri ->
+                        try {
+                            val oldFile = File(Uri.parse(oldUri).path ?: "")
+                            if (oldFile.exists() && oldFile.absolutePath != destFile?.absolutePath) {
+                                oldFile.delete()
+                            }
+                        } catch (e: Exception) {
+                            // Log but don't fail the update
+                            e.printStackTrace()
+                        }
+                    }
+                    
+                    receipt.copy(
+                        storedUri = destFile?.let { Uri.fromFile(it).toString() },
+                        renamedFileName = newFileName,
+                        exportStatus = ExportStatus.EXPORTED  // Mark as committed when saved
+                    )
+                } else {
+                    receipt.copy(exportStatus = ExportStatus.EXPORTED)
+                }
+                
+                repository.updateReceipt(updatedReceipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error updating receipt"
             }

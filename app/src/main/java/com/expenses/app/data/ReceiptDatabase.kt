@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [Receipt::class], version = 1, exportSchema = false)
+@Database(entities = [Receipt::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ReceiptDatabase : RoomDatabase() {
     abstract fun receiptDao(): ReceiptDao
@@ -21,7 +21,9 @@ abstract class ReceiptDatabase : RoomDatabase() {
                     context.applicationContext,
                     ReceiptDatabase::class.java,
                     "receipt_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }
