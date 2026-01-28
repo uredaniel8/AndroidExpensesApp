@@ -1,10 +1,11 @@
 # Security Summary
 
 ## Security Analysis Report
-Date: 2026-01-28
+Date: January 2026
+Version: 2.0
 
 ### Overview
-This document provides a security assessment of the changes made to implement camera crash fixes, receipt deletion, and OneDrive integration.
+This document provides a security assessment of the changes made to implement camera crash fixes, receipt deletion, and ProtonDrive integration.
 
 ## Security Improvements Implemented
 
@@ -18,11 +19,11 @@ This document provides a security assessment of the changes made to implement ca
 - Token not persisted to disk (in-memory only)
 - Basic token validation (minimum 20 characters)
 
-**Recommendations for Production**:
+### Recommendations for Production**:
 - Store tokens in Android Keystore for encryption at rest
 - Implement OAuth2 flow instead of manual token entry
 - Add token expiration and automatic refresh
-- Use MSAL library's built-in token cache
+- Use secure token storage mechanism
 
 ### 2. Null Safety
 **Issue**: Code review identified multiple uses of `!!` operator that could cause NPEs.
@@ -59,12 +60,12 @@ This document provides a security assessment of the changes made to implement ca
 
 ### 5. Network Communication
 **Security Measures**:
-- HTTPS-only communication (enforced by Graph API)
+- HTTPS-only communication (enforced by ProtonDrive API)
 - Bearer token authentication
 - Proper error handling to avoid information leakage
 - Connection pooling via shared OkHttpClient
 
-**Note**: All network communication uses TLS/SSL by default with Microsoft Graph API.
+**Note**: All network communication uses TLS/SSL by default with ProtonDrive API.
 
 ## Permissions Added
 
@@ -73,7 +74,7 @@ This document provides a security assessment of the changes made to implement ca
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-**Justification**: Required for OneDrive API communication
+**Justification**: Required for ProtonDrive API communication
 **Risk Level**: Low - Standard permission for cloud services
 **User Impact**: No runtime permission request needed
 
@@ -86,15 +87,15 @@ This document provides a security assessment of the changes made to implement ca
 ### What Data is Collected
 - Receipt images (user-uploaded)
 - Receipt metadata (merchant, amount, date, category)
-- OneDrive access token (temporary, in-memory)
+- ProtonDrive access token (temporary, in-memory)
 
 ### Data Storage
 - **Local**: Room database (unencrypted)
-- **Cloud**: OneDrive (user's personal account)
+- **Cloud**: ProtonDrive (user's personal account)
 - **Temporary**: Cache directory (cleared automatically)
 
 ### Data Transmission
-- Only occurs when user explicitly taps "Upload to OneDrive"
+- Only occurs when user explicitly taps "Upload to ProtonDrive"
 - Uses HTTPS encryption
 - No automatic background uploads
 - No third-party analytics or tracking
@@ -117,13 +118,13 @@ This document provides a security assessment of the changes made to implement ca
 **Current**: Manual token entry
 **Limitation**: Requires users to obtain tokens externally
 **Risk**: Medium (user error, token exposure)
-**Recommendation**: Implement MSAL OAuth2 flow
+**Recommendation**: Implement OAuth2 flow
 
 ### 4. Certificate Pinning
 **Current**: Not implemented
 **Limitation**: Vulnerable to MITM with compromised CA
-**Risk**: Low (Graph API uses standard certs)
-**Recommendation**: Add certificate pinning for Graph API
+**Risk**: Low (ProtonDrive API uses standard certs)
+**Recommendation**: Add certificate pinning for ProtonDrive API
 
 ### 5. Code Obfuscation
 **Current**: ProGuard not configured for release builds
@@ -155,13 +156,13 @@ All code review feedback has been addressed:
 - Cloud uploads require explicit user action
 - No automatic data collection
 - User can delete data anytime
-- No cross-border data transfer (uses user's OneDrive region)
+- No cross-border data transfer (uses user's ProtonDrive region)
 
 ### Data Retention
 - User controls all data
 - Delete functionality provided
 - No server-side storage by app
-- OneDrive retention per user's settings
+- ProtonDrive retention per user's settings
 
 ## Security Best Practices Applied
 
@@ -178,13 +179,13 @@ All code review feedback has been addressed:
 ## Recommendations for Production Deployment
 
 ### High Priority
-1. **Implement OAuth2 Flow**: Use MSAL for proper authentication
+1. **Implement OAuth2 Flow**: Use OAuth2 for proper authentication
 2. **Token Encryption**: Store tokens in Android Keystore
 3. **Database Encryption**: Use SQLCipher for Room database
 4. **ProGuard Configuration**: Obfuscate release builds
 
 ### Medium Priority
-5. **Certificate Pinning**: Pin Microsoft Graph API certificates
+5. **Certificate Pinning**: Pin ProtonDrive API certificates
 6. **Security Logging**: Log security events (without sensitive data)
 7. **Token Refresh**: Implement automatic token renewal
 8. **Rate Limiting**: Add client-side rate limiting
@@ -219,8 +220,8 @@ Consider professional security audit for:
 ## Incident Response
 
 ### If Access Token Compromised
-1. User should revoke token in Azure Portal
-2. Disable OneDrive integration in app
+1. User should revoke token in Proton account settings
+2. Disable ProtonDrive integration in app
 3. Generate new token with minimal permissions
 4. Re-enable with new token
 
@@ -245,5 +246,6 @@ Security review completed. No critical vulnerabilities found. Ready for function
 
 ---
 **Reviewer**: GitHub Copilot Agent
-**Date**: 2026-01-28
+**Date**: January 2026
+**Version**: 2.0
 **Status**: ✅ APPROVED (with recommendations for production)
