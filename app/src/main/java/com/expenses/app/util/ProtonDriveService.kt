@@ -5,43 +5,32 @@ import android.net.Uri
 import com.expenses.app.data.Receipt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
 
 /**
- * Service class for handling ProtonDrive upload operations.
+ * Service class for handling local storage operations.
  * 
  * Features:
- * - Uploads receipts to ProtonDrive with category-based folder organization
+ * - Saves receipts to local device storage with category-based folder organization
  * - Fuel category receipts go to "Receipts/Fuel" folder (case-insensitive match)
  * - Other category receipts go to "Receipts/Other" folder
- * - Uses ProtonDrive API for file uploads
+ * - Stores files in the app's external files directory
  * 
  * Note: Category matching is case-insensitive, so "Fuel", "FUEL", "fuel" all match.
  */
 class ProtonDriveService(private val context: Context) {
     
     companion object {
-        private const val PROTONDRIVE_API_BASE_URL = "https://drive.proton.me/api"
         private const val FUEL_FOLDER_PATH = "Receipts/Fuel"
         private const val OTHER_FOLDER_PATH = "Receipts/Other"
-        
-        // Shared OkHttpClient for connection pooling
-        private val client = OkHttpClient()
     }
     
     /**
-     * Configuration for ProtonDrive access.
-     * Note: In a production app, the access token should be obtained via OAuth2
-     * and stored securely in Android Keystore.
-     * This is a simplified implementation for demonstration.
+     * Configuration for local storage.
      */
     data class ProtonDriveConfig(
-        val accessToken: String,
+        val accessToken: String = "",
         val enabled: Boolean = false
     )
     
@@ -54,26 +43,23 @@ class ProtonDriveService(private val context: Context) {
     }
     
     fun isConfigured(): Boolean {
-        return config != null && config!!.enabled && config!!.accessToken.isNotBlank()
+        return config != null && config!!.enabled
     }
     
     /**
-     * Uploads a receipt image to ProtonDrive.
+     * Saves a receipt image to local storage.
      * 
-     * @param receipt The receipt to upload
-     * @param imageUri The URI of the image to upload
-     * @return Result with the ProtonDrive file path or error message
+     * @param receipt The receipt to save
+     * @param imageUri The URI of the image to save
+     * @return Result with the local file path or error message
      */
     suspend fun uploadReceipt(receipt: Receipt, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
         val currentConfig = config
-        var tempFile: File? = null
         
         try {
-            if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
-                return@withContext Result.failure(Exception("ProtonDrive is not configured. Please set up ProtonDrive integration in settings."))
+            if (currentConfig == null || !currentConfig.enabled) {
+                return@withContext Result.failure(Exception("Local storage is not enabled. Please enable local storage in settings."))
             }
-            
-            val accessToken = currentConfig.accessToken
             
             // Determine the folder based on category
             val folderPath = if (receipt.category.equals("Fuel", ignoreCase = true)) {
@@ -92,124 +78,66 @@ class ProtonDriveService(private val context: Context) {
                 description = receipt.description
             )
             
-            // Copy file to temporary location if needed
-            val file = getFileFromUri(Uri.parse(imageUri))
-            // Track if we created a temp file that needs cleanup
-            tempFile = if (Uri.parse(imageUri).scheme == "content") file else null
+            // Create the destination folder
+            val baseFolder = File(context.getExternalFilesDir(null), folderPath)
+            if (!baseFolder.exists()) {
+                baseFolder.mkdirs()
+            }
             
-            // Upload to ProtonDrive
-            val uploadUrl = "$PROTONDRIVE_API_BASE_URL/files/upload?path=/$folderPath/$fileName"
+            // Copy file to local storage
+            val destFile = File(baseFolder, fileName)
+            val sourceUri = Uri.parse(imageUri)
             
-            val requestBody = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            
-            val request = Request.Builder()
-                .url(uploadUrl)
-                .addHeader("Authorization", "Bearer $accessToken")
-                .addHeader("Content-Type", "image/jpeg")
-                .put(requestBody)
-                .build()
-            
-            client.newCall(request).execute().use { response ->
-                if (response.isSuccessful) {
-                    val protonDrivePath = "$folderPath/$fileName"
-                    Result.success(protonDrivePath)
-                } else {
-                    val errorBody = response.body?.string() ?: "Unknown error - check network connection and permissions"
-                    Result.failure(Exception("Upload failed: ${response.code} - $errorBody"))
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    input.copyTo(output)
                 }
+            }
+            
+            if (destFile.exists()) {
+                val localPath = "$folderPath/$fileName"
+                Result.success(localPath)
+            } else {
+                Result.failure(Exception("Failed to save file to local storage"))
             }
         } catch (e: Exception) {
             Result.failure(e)
-        } finally {
-            // Clean up temporary file if created
-            tempFile?.let {
-                try {
-                    if (it.exists()) {
-                        it.delete()
-                    }
-                } catch (e: Exception) {
-                    // Ignore cleanup errors
-                    e.printStackTrace()
-                }
-            }
         }
     }
     
     /**
-     * Gets a File object from a URI.
-     * If the URI points to a content:// URI, copies it to a temporary file first.
-     */
-    private fun getFileFromUri(uri: Uri): File {
-        return when (uri.scheme) {
-            "content" -> {
-                // Create a temporary file
-                val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(tempFile).use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                tempFile
-            }
-            "file" -> {
-                // Direct file path
-                val path = uri.path
-                if (path != null) {
-                    File(path)
-                } else {
-                    throw IllegalArgumentException("Invalid file URI: path is null")
-                }
-            }
-            else -> {
-                throw IllegalArgumentException("Unsupported URI scheme: ${uri.scheme}")
-            }
-        }
-    }
-    
-    /**
-     * Creates the folder structure on ProtonDrive if it doesn't exist.
+     * Ensures that the folder structure exists in local storage.
      * This should be called during initial setup.
      */
     suspend fun ensureFoldersExist(): Result<Unit> = withContext(Dispatchers.IO) {
         val currentConfig = config
         
         try {
-            if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
-                return@withContext Result.failure(Exception("ProtonDrive is not configured"))
+            if (currentConfig == null || !currentConfig.enabled) {
+                return@withContext Result.failure(Exception("Local storage is not enabled"))
             }
             
-            val accessToken = currentConfig.accessToken
-            
             // Create base Receipts folder
-            createFolder("Receipts", accessToken)
+            val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
+            if (!baseFolder.exists()) {
+                baseFolder.mkdirs()
+            }
             
             // Create Fuel subfolder
-            createFolder(FUEL_FOLDER_PATH, accessToken)
+            val fuelFolder = File(context.getExternalFilesDir(null), FUEL_FOLDER_PATH)
+            if (!fuelFolder.exists()) {
+                fuelFolder.mkdirs()
+            }
             
             // Create Other subfolder
-            createFolder(OTHER_FOLDER_PATH, accessToken)
+            val otherFolder = File(context.getExternalFilesDir(null), OTHER_FOLDER_PATH)
+            if (!otherFolder.exists()) {
+                otherFolder.mkdirs()
+            }
             
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-    
-    private fun createFolder(path: String, accessToken: String) {
-        val url = "$PROTONDRIVE_API_BASE_URL/folders?path=/$path"
-        
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $accessToken")
-            .get()
-            .build()
-        
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful && response.code == 404) {
-                // Folder doesn't exist, create it
-                // Note: This is a simplified implementation
-                // In production, use proper folder creation API
-            }
         }
     }
 }
