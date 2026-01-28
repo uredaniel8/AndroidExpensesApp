@@ -2,13 +2,18 @@ package com.expenses.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,6 +25,7 @@ fun SettingsScreen(
     var accessToken by remember { mutableStateOf("") }
     var isEnabled by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
+    var showToken by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -91,7 +97,16 @@ fun SettingsScreen(
                     label = { Text("OneDrive Access Token") },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Paste your OneDrive access token here") },
-                    minLines = 3
+                    minLines = 3,
+                    visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showToken = !showToken }) {
+                            Icon(
+                                if (showToken) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = if (showToken) "Hide token" else "Show token"
+                            )
+                        }
+                    }
                 )
 
                 TextButton(
@@ -102,10 +117,10 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        onConfigureOneDrive(accessToken, isEnabled)
+                        onConfigureOneDrive(accessToken.trim(), isEnabled)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = accessToken.isNotBlank()
+                    enabled = accessToken.trim().length >= 20 // Basic validation for minimum token length
                 ) {
                     Text("Save Configuration")
                 }

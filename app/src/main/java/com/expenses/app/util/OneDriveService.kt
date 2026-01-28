@@ -17,31 +17,36 @@ import java.io.FileOutputStream
  * 
  * Features:
  * - Uploads receipts to OneDrive with category-based folder organization
- * - Fuel category receipts go to "Receipts/Fuel" folder
+ * - Fuel category receipts go to "Receipts/Fuel" folder (case-insensitive match)
  * - Other category receipts go to "Receipts/Other" folder
  * - Uses Microsoft Graph API for file uploads
+ * 
+ * Note: Category matching is case-insensitive, so "Fuel", "FUEL", "fuel" all match.
  */
 class OneDriveService(private val context: Context) {
-    
-    private val client = OkHttpClient()
     
     companion object {
         private const val GRAPH_API_BASE_URL = "https://graph.microsoft.com/v1.0"
         private const val FUEL_FOLDER_PATH = "Receipts/Fuel"
         private const val OTHER_FOLDER_PATH = "Receipts/Other"
+        
+        // Shared OkHttpClient for connection pooling
+        private val client = OkHttpClient()
     }
     
     /**
      * Configuration for OneDrive access.
-     * Note: In a production app, the access token should be obtained via OAuth2.
-     * This is a placeholder implementation.
+     * Note: In a production app, the access token should be obtained via OAuth2
+     * and stored securely in Android Keystore.
+     * This is a simplified implementation for demonstration.
      */
     data class OneDriveConfig(
         val accessToken: String,
         val enabled: Boolean = false
     )
     
-    // This should be stored securely or obtained via OAuth
+    // This should be stored securely in Android Keystore in production
+    @Volatile
     private var config: OneDriveConfig? = null
     
     fun setConfig(config: OneDriveConfig) {
@@ -60,12 +65,15 @@ class OneDriveService(private val context: Context) {
      * @return Result with the OneDrive file path or error message
      */
     suspend fun uploadReceipt(receipt: Receipt, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
+        val currentConfig = config
+        var tempFile: File? = null
+        
         try {
-            if (!isConfigured()) {
+            if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
                 return@withContext Result.failure(Exception("OneDrive is not configured. Please set up OneDrive integration in settings."))
             }
             
-            val accessToken = config!!.accessToken
+            val accessToken = currentConfig.accessToken
             
             // Determine the folder based on category
             val folderPath = if (receipt.category.equals("Fuel", ignoreCase = true)) {
@@ -86,6 +94,8 @@ class OneDriveService(private val context: Context) {
             
             // Copy file to temporary location if needed
             val file = getFileFromUri(Uri.parse(imageUri))
+            // Track if we created a temp file that needs cleanup
+            tempFile = if (Uri.parse(imageUri).scheme == "content") file else null
             
             // Upload to OneDrive
             val uploadUrl = "$GRAPH_API_BASE_URL/me/drive/root:/$folderPath/$fileName:/content"
@@ -104,12 +114,24 @@ class OneDriveService(private val context: Context) {
                     val oneDrivePath = "$folderPath/$fileName"
                     Result.success(oneDrivePath)
                 } else {
-                    val errorBody = response.body?.string() ?: "Unknown error"
+                    val errorBody = response.body?.string() ?: "Unknown error - check network connection and permissions"
                     Result.failure(Exception("Upload failed: ${response.code} - $errorBody"))
                 }
             }
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            // Clean up temporary file if created
+            tempFile?.let {
+                try {
+                    if (it.exists()) {
+                        it.delete()
+                    }
+                } catch (e: Exception) {
+                    // Ignore cleanup errors
+                    e.printStackTrace()
+                }
+            }
         }
     }
     
@@ -118,18 +140,29 @@ class OneDriveService(private val context: Context) {
      * If the URI points to a content:// URI, copies it to a temporary file first.
      */
     private fun getFileFromUri(uri: Uri): File {
-        return if (uri.scheme == "content") {
-            // Create a temporary file
-            val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(tempFile).use { output ->
-                    input.copyTo(output)
+        return when (uri.scheme) {
+            "content" -> {
+                // Create a temporary file
+                val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                tempFile
+            }
+            "file" -> {
+                // Direct file path
+                val path = uri.path
+                if (path != null) {
+                    File(path)
+                } else {
+                    throw IllegalArgumentException("Invalid file URI: path is null")
                 }
             }
-            tempFile
-        } else {
-            // Direct file path
-            File(uri.path ?: throw IllegalArgumentException("Invalid file URI"))
+            else -> {
+                throw IllegalArgumentException("Unsupported URI scheme: ${uri.scheme}")
+            }
         }
     }
     
@@ -138,21 +171,23 @@ class OneDriveService(private val context: Context) {
      * This should be called during initial setup.
      */
     suspend fun ensureFoldersExist(): Result<Unit> = withContext(Dispatchers.IO) {
+        val currentConfig = config
+        
         try {
-            if (!isConfigured()) {
+            if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
                 return@withContext Result.failure(Exception("OneDrive is not configured"))
             }
             
-            val accessToken = config!!.accessToken
+            val accessToken = currentConfig.accessToken
             
             // Create base Receipts folder
             createFolder("Receipts", accessToken)
             
             // Create Fuel subfolder
-            createFolder("$FUEL_FOLDER_PATH", accessToken)
+            createFolder(FUEL_FOLDER_PATH, accessToken)
             
             // Create Other subfolder
-            createFolder("$OTHER_FOLDER_PATH", accessToken)
+            createFolder(OTHER_FOLDER_PATH, accessToken)
             
             Result.success(Unit)
         } catch (e: Exception) {
