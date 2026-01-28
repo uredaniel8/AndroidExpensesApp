@@ -14,10 +14,10 @@ object FileUtils {
         amount: Double,
         extension: String
     ): String {
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.US)
         val dateStr = dateFormat.format(Date(date))
-        val descStr = description?.replace(Regex("[^a-zA-Z0-9\\s]"), "")?.trim() ?: "NoDescription"
-        val amountStr = String.format("%.2f", amount)
+        val descStr = description?.replace(Regex("[^a-zA-Z0-9\\s]"), "")?.trim()?.replace(Regex("\\s+"), " ") ?: "NoDescription"
+        val amountStr = String.format(Locale.US, "%.2f", amount)
         
         return "${dateStr} - ${descStr} - ${amountStr}.${extension}"
     }
@@ -30,7 +30,10 @@ object FileUtils {
             File(baseFolder, "Others")
         }
         if (!folder.exists()) {
-            folder.mkdirs()
+            val created = folder.mkdirs()
+            if (!created && !folder.exists()) {
+                throw IllegalStateException("Failed to create directory: ${folder.absolutePath}")
+            }
         }
         return folder
     }

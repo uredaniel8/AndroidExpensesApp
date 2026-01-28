@@ -9,7 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Image as ImageIcon
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -111,7 +111,7 @@ fun EditReceiptScreen(
                                 onBack()
                             }
                         },
-                        enabled = receipt != null
+                        enabled = receipt != null && totalAmount.toDoubleOrNull() != null && totalAmount.isNotBlank()
                     ) {
                         Icon(Icons.Default.Save, contentDescription = "Save")
                     }
@@ -153,7 +153,7 @@ fun EditReceiptScreen(
                                 onClick = { showFullImage = true },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.ImageIcon, contentDescription = null)
+                                Icon(Icons.Default.Image, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("View Full Image")
                             }

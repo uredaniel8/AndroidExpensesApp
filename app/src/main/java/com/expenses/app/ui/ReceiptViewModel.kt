@@ -10,6 +10,7 @@ import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 class ReceiptViewModel(application: Application) : AndroidViewModel(application) {
     private val database = ReceiptDatabase.getDatabase(application)
@@ -90,6 +91,19 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                         categoryFolder.absolutePath,
                         newFileName
                     )
+                    
+                    // Delete old file if it exists and is different from the new one
+                    receipt.storedUri?.let { oldUri ->
+                        try {
+                            val oldFile = File(Uri.parse(oldUri).path ?: "")
+                            if (oldFile.exists() && oldFile.absolutePath != destFile?.absolutePath) {
+                                oldFile.delete()
+                            }
+                        } catch (e: Exception) {
+                            // Log but don't fail the update
+                            e.printStackTrace()
+                        }
+                    }
                     
                     receipt.copy(
                         storedUri = destFile?.let { Uri.fromFile(it).toString() },

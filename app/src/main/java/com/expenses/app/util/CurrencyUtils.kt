@@ -16,20 +16,6 @@ object CurrencyUtils {
     }
     
     /**
-     * Formats currency display with proper symbols
-     */
-    fun formatCurrency(amount: Double, currency: String): String {
-        val symbol = when (currency) {
-            "GBP" -> "£"
-            "USD" -> "$"
-            "EUR" -> "€"
-            "CHF" -> "CHF"
-            else -> currency
-        }
-        return "$symbol${String.format("%.2f", amount)}"
-    }
-    
-    /**
      * Gets the currency symbol for display
      */
     fun getCurrencySymbol(currency: String): String {
@@ -40,5 +26,13 @@ object CurrencyUtils {
             "CHF" -> "CHF"
             else -> currency
         }
+    }
+    
+    /**
+     * Formats currency display with proper symbols
+     */
+    fun formatCurrency(amount: Double, currency: String): String {
+        val symbol = getCurrencySymbol(currency)
+        return "$symbol${String.format("%.2f", amount)}"
     }
 }
