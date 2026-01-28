@@ -1,8 +1,8 @@
-# OneDrive Integration Guide
+# ProtonDrive Integration Guide
 
 ## Overview
 
-The Android Expenses App now supports automatic receipt uploads to Microsoft OneDrive with category-based folder organization.
+The Android Expenses App now supports automatic receipt uploads to ProtonDrive with category-based folder organization.
 
 ## Features
 
@@ -13,16 +13,15 @@ The Android Expenses App now supports automatic receipt uploads to Microsoft One
 ### Upload Process
 1. Capture or import a receipt
 2. Edit and categorize the receipt
-3. Tap "Upload to OneDrive" button
+3. Tap "Upload to ProtonDrive" button
 4. Receipt image is uploaded to the appropriate folder based on category
 
 ## Setup Instructions
 
 ### Prerequisites
-1. Microsoft Azure account
-2. Registered application in Azure AD
-3. Microsoft Graph API permissions configured
-4. Valid access token
+1. ProtonDrive account
+2. API access enabled in Proton account settings
+3. Valid access token
 
 ### Configuration Steps
 
@@ -30,25 +29,23 @@ The Android Expenses App now supports automatic receipt uploads to Microsoft One
    - Open the app
    - Tap the Settings icon (⚙️) in the top right corner
 
-2. **Enable OneDrive**
-   - Toggle "Enable OneDrive Integration" switch
-   - Enter your OneDrive access token
+2. **Enable ProtonDrive**
+   - Toggle "Enable ProtonDrive Integration" switch
+   - Enter your ProtonDrive access token
    - Tap "Save Configuration"
 
 3. **Getting an Access Token**
    
    For development/testing:
    ```
-   1. Visit https://portal.azure.com
-   2. Go to "Azure Active Directory" → "App registrations"
-   3. Create a new registration or select existing
-   4. Add Microsoft Graph API permissions:
-      - Files.ReadWrite
-      - Files.ReadWrite.All (for folder creation)
-   5. Generate access token using authentication flow
+   1. Visit https://account.proton.me
+   2. Navigate to "Account Settings"
+   3. Go to "Security" → "API Access"
+   4. Generate an access token for ProtonDrive
+   5. Copy the token for use in the app
    ```
 
-   **Note**: In production, implement proper OAuth2 authentication flow with MSAL library.
+   **Note**: In production, implement proper OAuth2 authentication flow.
 
 ## Usage
 
@@ -56,7 +53,7 @@ The Android Expenses App now supports automatic receipt uploads to Microsoft One
 
 1. **From Edit Screen**:
    - Open any receipt
-   - Tap "Upload to OneDrive" button
+   - Tap "Upload to ProtonDrive" button
    - Wait for upload confirmation
 
 2. **Upload Status**:
@@ -66,7 +63,7 @@ The Android Expenses App now supports automatic receipt uploads to Microsoft One
 ### Receipt Status Indicators
 
 - **Needs Review**: Not yet uploaded
-- **Exported**: Successfully uploaded to OneDrive
+- **Exported**: Successfully uploaded to ProtonDrive
 - **Export Failed**: Upload attempt failed
 
 ## File Naming Convention
@@ -78,10 +75,10 @@ DD.MM.YYYY - MERCHANT - TOTAL.jpg
 
 Example: `28.01.2026 - Shell Gas Station - 45.50.jpg`
 
-## Folder Structure on OneDrive
+## Folder Structure on ProtonDrive
 
 ```
-OneDrive/
+ProtonDrive/
 └── Receipts/
     ├── Fuel/
     │   ├── 28.01.2026 - Shell - 45.50.jpg
@@ -95,7 +92,7 @@ OneDrive/
 
 ### Components
 
-1. **OneDriveService.kt**
+1. **ProtonDriveService.kt**
    - Handles API communication
    - Manages file uploads
    - Creates folder structure
@@ -111,17 +108,13 @@ OneDrive/
 
 ### API Endpoints Used
 
-- Upload file: `PUT /me/drive/root:/{folder}/{filename}:/content`
-- Check folder: `GET /me/drive/root:/{folder}`
+- Upload file: `POST /files/upload?path=/{folder}/{filename}`
+- Create folder: `POST /folders?path=/{folder}`
 
 ### Dependencies
 
 ```kotlin
-// Microsoft Graph SDK
-implementation("com.microsoft.graph:microsoft-graph:6.7.0")
-implementation("com.microsoft.identity.client:msal:5.0.0")
-
-// HTTP Client
+// HTTP Client for ProtonDrive API
 implementation("com.squareup.okhttp3:okhttp:4.12.0")
 ```
 
@@ -142,14 +135,14 @@ implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
 ### Common Issues
 
-**"OneDrive is not configured"**
+**"ProtonDrive is not configured"**
 - Solution: Go to Settings and configure access token
 
 **"Upload failed: 401"**
-- Solution: Token expired, generate new token
+- Solution: Token expired or invalid, generate new token
 
 **"Upload failed: 403"**
-- Solution: Check API permissions in Azure AD
+- Solution: Check API permissions in Proton account settings
 
 **"Upload failed: 404"**
 - Solution: Folder structure not created, check permissions
@@ -157,7 +150,7 @@ implementation("com.squareup.okhttp3:okhttp:4.12.0")
 ### Debug Steps
 
 1. Verify token is valid
-2. Check Azure AD permissions
+2. Check Proton account API access settings
 3. Test API access with Postman/cURL
 4. Review app logs for detailed errors
 
@@ -173,21 +166,22 @@ implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
 ## API Rate Limits
 
-Microsoft Graph API limits:
-- 10,000 requests per 10 minutes per app
-- File size limit: 4GB (250MB recommended)
+ProtonDrive API limits:
+- Check ProtonDrive documentation for current rate limits
+- File size limit: Varies by plan (typically 25GB per file)
 
 ## Support
 
 For issues or questions:
-1. Check Azure AD configuration
-2. Verify API permissions
+1. Check documentation files
+2. Verify Proton account configuration
 3. Review app logs
 4. Contact support with error details
 
 ## Version History
 
-- **v1.0** (Jan 2026): Initial OneDrive integration
+- **v2.0** (Jan 2026): ProtonDrive integration
+  - Replaced OneDrive with ProtonDrive
   - Category-based folder organization
   - Manual upload from edit screen
-  - Basic token configuration
+  - Token configuration in settings

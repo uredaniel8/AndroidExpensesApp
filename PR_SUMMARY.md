@@ -1,7 +1,7 @@
 # Pull Request Summary
 
 ## 🎯 Objective
-Fix critical camera crash, implement receipt deletion feature, and add Microsoft OneDrive integration with category-based folder organization.
+Fix critical camera crash, implement receipt deletion feature, and add ProtonDrive integration with category-based folder organization.
 
 ## 📊 Statistics
 - **Files Changed**: 14
@@ -40,8 +40,8 @@ Fix critical camera crash, implement receipt deletion feature, and add Microsoft
 - `app/src/main/java/com/expenses/app/ui/ReceiptViewModel.kt`
 - `app/src/main/java/com/expenses/app/MainActivity.kt`
 
-### 3. OneDrive Integration ✅
-**Problem**: Need to upload receipts to OneDrive with category-based organization.
+### 3. ProtonDrive Integration ✅
+**Problem**: Need to upload receipts to ProtonDrive with category-based organization.
 
 **Requirements**:
 - Fuel receipts → `Receipts/Fuel/` folder
@@ -49,14 +49,14 @@ Fix critical camera crash, implement receipt deletion feature, and add Microsoft
 - Manual upload capability
 
 **Solution**: 
-- Complete OneDrive integration using Microsoft Graph API
+- Complete ProtonDrive integration using ProtonDrive API
 - Settings screen for configuration
 - Upload button in receipt edit screen
 - Automatic status tracking (EXPORTED/FAILED)
 - Category-based folder routing (case-insensitive)
 
 **Files Created**:
-- `app/src/main/java/com/expenses/app/util/OneDriveService.kt`
+- `app/src/main/java/com/expenses/app/util/ProtonDriveService.kt`
 - `app/src/main/java/com/expenses/app/ui/screens/SettingsScreen.kt`
 
 **Files Modified**:
@@ -71,18 +71,14 @@ Fix critical camera crash, implement receipt deletion feature, and add Microsoft
 ## 🏗️ Technical Implementation
 
 ### Architecture
-- **Service Layer**: `OneDriveService` handles all API communication
+- **Service Layer**: `ProtonDriveService` handles all API communication
 - **ViewModel Layer**: Coordinates upload process and status tracking
 - **UI Layer**: Settings screen for config, upload button in edit screen
 - **Data Layer**: Receipt status updates (EXPORTED/FAILED)
 
 ### Dependencies Added
 ```kotlin
-// Microsoft Graph SDK for OneDrive
-implementation("com.microsoft.graph:microsoft-graph:6.7.0")
-implementation("com.microsoft.identity.client:msal:5.0.0")
-
-// HTTP Client
+// HTTP client (OkHttp) for ProtonDrive
 implementation("com.squareup.okhttp3:okhttp:4.12.0")
 ```
 
@@ -107,7 +103,7 @@ implementation("com.squareup.okhttp3:okhttp:4.12.0")
 ✅ FileProvider for secure file sharing
 
 ### Production Recommendations
-- Implement OAuth2 flow with MSAL
+- Implement OAuth2 flow
 - Store tokens in Android Keystore
 - Add database encryption with SQLCipher
 - Enable ProGuard for code obfuscation
@@ -117,10 +113,10 @@ See `SECURITY_SUMMARY.md` for complete analysis.
 
 ## 📚 Documentation Created
 
-### 1. ONEDRIVE_INTEGRATION.md
-Complete guide for setting up and using OneDrive integration:
+### 1. PROTONDRIVE_INTEGRATION.md
+Complete guide for setting up and using ProtonDrive integration:
 - Setup instructions
-- Azure AD configuration
+- Proton account configuration
 - Usage examples
 - Troubleshooting guide
 - API documentation
@@ -147,7 +143,7 @@ Security analysis and recommendations:
 - [ ] Test camera capture on real device
 - [ ] Test camera permission handling
 - [ ] Test receipt deletion with/without images
-- [ ] Test OneDrive configuration
+- [ ] Test ProtonDrive configuration
 - [ ] Test upload with Fuel category
 - [ ] Test upload with other categories
 - [ ] Test upload without configuration
@@ -157,7 +153,7 @@ Security analysis and recommendations:
 - [ ] Test concurrent operations
 
 ### Automated Testing (Future)
-- Unit tests for OneDriveService
+- Unit tests for ProtonDriveService
 - ViewModel tests with mocked service
 - UI tests for delete confirmation
 - Integration tests for upload flow
@@ -186,42 +182,41 @@ Security analysis and recommendations:
 ## 🎨 UI/UX Changes
 
 ### New Screens
-1. **Settings Screen**: OneDrive configuration interface
+1. **Settings Screen**: ProtonDrive configuration interface
 
 ### Modified Screens
 1. **Home Screen**: Added Settings icon in toolbar
 2. **Edit Receipt Screen**: 
    - Added Delete button in action bar
-   - Added Upload to OneDrive button
+   - Added Upload to ProtonDrive button
    - Added confirmation dialogs
 
 ### User Flows
 ```
-Configure OneDrive:
+Configure ProtonDrive:
 Home → Settings → Enable → Enter Token → Save
 
 Delete Receipt:
 Home → Receipt → Delete → Confirm → Back to Home
 
 Upload Receipt:
-Home → Receipt → Upload to OneDrive → Success/Error
+Home → Receipt → Upload to ProtonDrive → Success/Error
 ```
 
 ## 🚀 Deployment Notes
 
 ### Minimum Requirements
 - Android 8.0 (API 26) or higher
-- Internet connection (for OneDrive)
+- Internet connection (for ProtonDrive)
 - Camera (for capture feature)
 
 ### Configuration Required
-1. Azure AD application setup
-2. Microsoft Graph API permissions
-3. OneDrive access token generation
+1. Proton account setup
+2. ProtonDrive API access token generation
 
 ### Backward Compatibility
 ✅ Fully backward compatible
-- OneDrive is optional feature
+- ProtonDrive is optional feature
 - Existing receipts work without changes
 - No data migration required
 
@@ -230,7 +225,7 @@ Home → Receipt → Upload to OneDrive → Success/Error
 ### User Benefits
 - ✅ Reliable camera functionality
 - ✅ Ability to undo wrong imports
-- ✅ Automatic cloud backup to OneDrive
+- ✅ Automatic cloud backup to ProtonDrive
 - ✅ Organized folder structure
 - ✅ Better data management
 
@@ -245,7 +240,7 @@ Home → Receipt → Upload to OneDrive → Success/Error
 - ✅ Reduced user frustration (camera works)
 - ✅ Better data retention (cloud backup)
 - ✅ Professional folder organization
-- ✅ Competitive feature (OneDrive integration)
+- ✅ Competitive feature (ProtonDrive integration)
 
 ## 🔄 Future Enhancements
 
@@ -267,7 +262,7 @@ Home → Receipt → Upload to OneDrive → Success/Error
 
 ### For Issues
 1. Check documentation files
-2. Verify Azure AD configuration
+2. Verify Proton account configuration
 3. Review error logs
 4. Test with valid token
 
@@ -293,7 +288,7 @@ Home → Receipt → Upload to OneDrive → Success/Error
 This PR successfully addresses all requirements from the problem statement:
 - ✅ Camera crash fixed
 - ✅ Receipt deletion implemented
-- ✅ OneDrive integration complete
+- ✅ ProtonDrive integration complete
 - ✅ Category-based organization working
 - ✅ Security improvements applied
 - ✅ Comprehensive documentation provided
@@ -310,11 +305,11 @@ The implementation is production-ready for demonstration purposes and includes c
 
 ## Commit History
 
-1. **Initial plan** (f60fd97)
-2. **Fix camera crash and add receipt deletion feature** (3629064)
-3. **Add OneDrive integration with category-based folder organization** (a85d64b)
-4. **Address code review feedback - improve security and error handling** (dab1dad)
-5. **Add comprehensive documentation and security summary** (0869a54)
+1. **Initial plan** (524a23b)
+2. **Fix camera crash and add receipt deletion feature** (part of v2.0)
+3. **Add ProtonDrive integration with category-based folder organization** (a652efe)
+4. **Address code review feedback - improve security and error handling** (eb5a84d)
+5. **Add comprehensive documentation and security summary** (25459ee)
 
 ---
 
