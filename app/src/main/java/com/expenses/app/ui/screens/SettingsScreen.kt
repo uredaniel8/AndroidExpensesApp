@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onConfigureOneDrive: (String, Boolean) -> Unit
+    onConfigureProtonDrive: (String, Boolean) -> Unit
 ) {
     var accessToken by remember { mutableStateOf("") }
     var isEnabled by remember { mutableStateOf(false) }
@@ -48,7 +48,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "OneDrive Integration",
+                text = "ProtonDrive Integration",
                 style = MaterialTheme.typography.headlineSmall
             )
 
@@ -60,7 +60,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Configure OneDrive to automatically upload receipts:",
+                        text = "Configure ProtonDrive to automatically upload receipts:",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     
@@ -83,7 +83,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Enable OneDrive Integration")
+                Text("Enable ProtonDrive Integration")
                 Switch(
                     checked = isEnabled,
                     onCheckedChange = { isEnabled = it }
@@ -94,9 +94,9 @@ fun SettingsScreen(
                 OutlinedTextField(
                     value = accessToken,
                     onValueChange = { accessToken = it },
-                    label = { Text("OneDrive Access Token") },
+                    label = { Text("ProtonDrive Access Token") },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Paste your OneDrive access token here") },
+                    placeholder = { Text("Paste your ProtonDrive access token here") },
                     minLines = 3,
                     visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -117,7 +117,7 @@ fun SettingsScreen(
 
                 Button(
                     onClick = {
-                        onConfigureOneDrive(accessToken.trim(), isEnabled)
+                        onConfigureProtonDrive(accessToken.trim(), isEnabled)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = accessToken.trim().length >= 20 // Basic validation for minimum token length
@@ -132,14 +132,14 @@ fun SettingsScreen(
     if (showInfo) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
-            title = { Text("Getting OneDrive Access Token") },
+            title = { Text("Getting ProtonDrive Access Token") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("To get a OneDrive access token:")
-                    Text("1. Visit https://portal.azure.com")
-                    Text("2. Register an application in Azure AD")
-                    Text("3. Configure Microsoft Graph API permissions")
-                    Text("4. Generate an access token")
+                    Text("To get a ProtonDrive access token:")
+                    Text("1. Visit https://account.proton.me")
+                    Text("2. Navigate to Account Settings")
+                    Text("3. Go to Security → API Access")
+                    Text("4. Generate an access token for ProtonDrive")
                     Text("")
                     Text(
                         "Note: This is a simplified setup. In production, you should use OAuth2 authentication flow.",

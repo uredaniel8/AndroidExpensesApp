@@ -109,8 +109,8 @@ fun ExpensesApp() {
                         viewModel.deleteReceipt(receiptToDelete)
                     }
                 },
-                onUploadToOneDrive = { receiptToUpload ->
-                    viewModel.uploadToOneDrive(receiptToUpload)
+                onUploadToProtonDrive = { receiptToUpload ->
+                    viewModel.uploadToProtonDrive(receiptToUpload)
                 },
                 onAddCategory = { categoryName ->
                     viewModel.addCategory(categoryName)
@@ -135,8 +135,8 @@ fun ExpensesApp() {
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onConfigureOneDrive = { accessToken, enabled ->
-                    viewModel.configureOneDrive(accessToken, enabled)
+                onConfigureProtonDrive = { accessToken, enabled ->
+                    viewModel.configureProtonDrive(accessToken, enabled)
                 }
             )
         }

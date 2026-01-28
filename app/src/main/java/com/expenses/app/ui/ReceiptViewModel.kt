@@ -13,7 +13,7 @@ import com.expenses.app.data.ExportStatus
 import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
-import com.expenses.app.util.OneDriveService
+import com.expenses.app.util.ProtonDriveService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +27,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val repository = ReceiptRepository(database.receiptDao())
     private val categoryRepository = CategoryRepository(database.categoryDao())
     private val ocrProcessor = OcrProcessor()
-    private val oneDriveService = OneDriveService(application)
+    private val protonDriveService = ProtonDriveService(application)
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -170,14 +170,14 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     }
     
     /**
-     * Configures OneDrive integration.
+     * Configures ProtonDrive integration.
      * 
-     * @param accessToken The OAuth access token for OneDrive
-     * @param enabled Whether OneDrive integration is enabled
+     * @param accessToken The OAuth access token for ProtonDrive
+     * @param enabled Whether ProtonDrive integration is enabled
      */
-    fun configureOneDrive(accessToken: String, enabled: Boolean) {
-        oneDriveService.setConfig(
-            OneDriveService.OneDriveConfig(
+    fun configureProtonDrive(accessToken: String, enabled: Boolean) {
+        protonDriveService.setConfig(
+            ProtonDriveService.ProtonDriveConfig(
                 accessToken = accessToken,
                 enabled = enabled
             )
@@ -186,28 +186,28 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
         if (enabled) {
             viewModelScope.launch {
                 try {
-                    oneDriveService.ensureFoldersExist()
-                    _uploadStatus.value = "OneDrive configured successfully"
+                    protonDriveService.ensureFoldersExist()
+                    _uploadStatus.value = "ProtonDrive configured successfully"
                 } catch (e: Exception) {
-                    _error.value = "Failed to configure OneDrive: ${e.message}"
+                    _error.value = "Failed to configure ProtonDrive: ${e.message}"
                 }
             }
         }
     }
     
     /**
-     * Uploads a receipt to OneDrive.
+     * Uploads a receipt to ProtonDrive.
      * 
      * @param receipt The receipt to upload
      */
-    fun uploadToOneDrive(receipt: Receipt) {
+    fun uploadToProtonDrive(receipt: Receipt) {
         viewModelScope.launch {
             try {
                 _isProcessing.value = true
-                _uploadStatus.value = "Uploading to OneDrive..."
+                _uploadStatus.value = "Uploading to ProtonDrive..."
                 
-                if (!oneDriveService.isConfigured()) {
-                    _error.value = "OneDrive is not configured. Please configure OneDrive in settings."
+                if (!protonDriveService.isConfigured()) {
+                    _error.value = "ProtonDrive is not configured. Please configure ProtonDrive in settings."
                     _uploadStatus.value = null
                     _isProcessing.value = false
                     return@launch
@@ -222,15 +222,15 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     return@launch
                 }
                 
-                val result = oneDriveService.uploadReceipt(receipt, imageUri)
+                val result = protonDriveService.uploadReceipt(receipt, imageUri)
                 
                 if (result.isSuccess) {
-                    val oneDrivePath = result.getOrNull()
-                    _uploadStatus.value = "Successfully uploaded to OneDrive"
+                    val protonDrivePath = result.getOrNull()
+                    _uploadStatus.value = "Successfully uploaded to ProtonDrive"
                     
-                    // Update receipt with OneDrive path and export status
+                    // Update receipt with ProtonDrive path and export status
                     val updatedReceipt = receipt.copy(
-                        exportFolderUri = oneDrivePath,
+                        exportFolderUri = protonDrivePath,
                         exportStatus = ExportStatus.EXPORTED,
                         lastExportAttemptAt = System.currentTimeMillis()
                     )
@@ -252,7 +252,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     repository.updateReceipt(updatedReceipt)
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error uploading to OneDrive"
+                _error.value = e.message ?: "Error uploading to ProtonDrive"
                 _uploadStatus.value = null
             } finally {
                 _isProcessing.value = false
