@@ -41,6 +41,7 @@ fun ExpensesApp() {
     val navController = rememberNavController()
     val viewModel: ReceiptViewModel = viewModel()
     val receipts by viewModel.receipts.collectAsState()
+    val categories by viewModel.categories.collectAsState()
     val scope = rememberCoroutineScope()
 
     NavHost(
@@ -69,7 +70,17 @@ fun ExpensesApp() {
             AddReceiptScreen(
                 onBack = { navController.popBackStack() },
                 onReceiptCaptured = { uri ->
-                    viewModel.processReceipt(uri)
+                    scope.launch {
+                        viewModel.processReceipt(uri)
+                        // Wait a bit for OCR processing, then navigate to edit the receipt
+                        kotlinx.coroutines.delay(1000)
+                        val latestReceipt = receipts.firstOrNull()
+                        latestReceipt?.let { 
+                            navController.navigate(Screen.EditReceipt.createRoute(it.id)) {
+                                popUpTo(Screen.Home.route)
+                            }
+                        }
+                    }
                 }
             )
         }
@@ -83,11 +94,19 @@ fun ExpensesApp() {
             
             EditReceiptScreen(
                 receipt = receipt,
+                categories = categories.map { it.name },
                 onBack = { navController.popBackStack() },
                 onSave = { updatedReceipt ->
                     scope.launch {
                         viewModel.updateReceipt(updatedReceipt)
                     }
+                },
+                onAddCategory = { categoryName ->
+                    viewModel.addCategory(categoryName)
+                },
+                onDeleteCategory = { categoryName ->
+                    val category = categories.firstOrNull { it.name == categoryName }
+                    category?.let { viewModel.deleteCategory(it) }
                 }
             )
         }

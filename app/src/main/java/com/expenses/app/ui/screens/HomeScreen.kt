@@ -3,13 +3,17 @@ package com.expenses.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import coil.compose.rememberAsyncImagePainter
 import com.expenses.app.data.Receipt
 import com.expenses.app.data.ExportStatus
 import java.text.SimpleDateFormat
@@ -87,6 +91,8 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptCard(receipt: Receipt, onClick: () -> Unit) {
+    var showImageDialog by remember { mutableStateOf(false) }
+    
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
@@ -104,7 +110,7 @@ fun ReceiptCard(receipt: Receipt, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "${receipt.totalAmount} ${receipt.currency}",
+                    text = formatCurrency(receipt.totalAmount, receipt.currency),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -126,10 +132,33 @@ fun ReceiptCard(receipt: Receipt, onClick: () -> Unit) {
                 )
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
-            StatusChip(status = receipt.exportStatus)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusChip(status = receipt.exportStatus)
+                
+                // View Image Button
+                if (receipt.originalUri != null || receipt.storedUri != null) {
+                    TextButton(onClick = { showImageDialog = true }) {
+                        Icon(Icons.Default.Image, contentDescription = "View Receipt Image")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("View Image")
+                    }
+                }
+            }
         }
+    }
+    
+    // Image Dialog
+    if (showImageDialog) {
+        ImageViewerDialog(
+            imageUri = receipt.storedUri ?: receipt.originalUri,
+            onDismiss = { showImageDialog = false }
+        )
     }
 }
 
@@ -163,4 +192,61 @@ fun StatusChip(status: ExportStatus) {
 fun formatDate(timestamp: Long): String {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     return dateFormat.format(Date(timestamp))
+}
+
+fun formatCurrency(amount: Double, currency: String): String {
+    val symbol = when (currency) {
+        "GBP" -> "£"
+        "USD" -> "$"
+        "EUR" -> "€"
+        "CHF" -> "CHF"
+        else -> currency
+    }
+    return "$symbol${String.format("%.2f", amount)}"
+}
+
+@Composable
+fun ImageViewerDialog(imageUri: String?, onDismiss: () -> Unit) {
+    if (imageUri == null) {
+        onDismiss()
+        return
+    }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Receipt Image",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Image(
+                    painter = rememberAsyncImagePainter(imageUri),
+                    contentDescription = "Receipt Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 500.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
 }
