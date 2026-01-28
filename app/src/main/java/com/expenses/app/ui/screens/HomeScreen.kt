@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.expenses.app.data.Receipt
 import com.expenses.app.data.ExportStatus
+import com.expenses.app.util.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -91,44 +92,60 @@ fun ReceiptCard(receipt: Receipt, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .padding(16.dp)
+                .fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = receipt.merchant ?: "Unknown Merchant",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "${receipt.totalAmount} ${receipt.currency}",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = receipt.merchant ?: "Unknown Merchant",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = CurrencyUtils.formatCurrency(receipt.totalAmount, receipt.currency),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = receipt.category,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = formatDate(receipt.receiptDate),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                StatusChip(status = receipt.exportStatus)
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = receipt.category,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = formatDate(receipt.receiptDate),
-                    style = MaterialTheme.typography.bodyMedium
+            // Image indicator
+            if (receipt.originalUri != null || receipt.storedUri != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.Image,
+                    contentDescription = "Has Image",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            StatusChip(status = receipt.exportStatus)
         }
     }
 }
@@ -142,8 +159,8 @@ fun StatusChip(status: ExportStatus) {
     }
     
     val text = when (status) {
-        ExportStatus.NOT_EXPORTED -> "Needs Review"
-        ExportStatus.EXPORTED -> "Exported"
+        ExportStatus.NOT_EXPORTED -> "Draft"
+        ExportStatus.EXPORTED -> "Committed"
         ExportStatus.FAILED -> "Export Failed"
     }
     

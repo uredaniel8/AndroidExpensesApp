@@ -43,6 +43,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     vatAmount = ocrResult.vatAmount,
                     currency = ocrResult.currency ?: CurrencyUtils.getDefaultCurrency(),
                     category = "Uncategorized",
+                    description = null,
                     notes = null,
                     ocrRawText = ocrResult.rawText,
                     ocrConfidence = ocrResult.confidence,
@@ -61,7 +62,35 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun updateReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
-                repository.updateReceipt(receipt)
+                // Save and rename the file based on category and new naming convention
+                val context = getApplication<Application>()
+                val updatedReceipt = if (receipt.originalUri != null || receipt.storedUri != null) {
+                    val sourceUri = Uri.parse(receipt.storedUri ?: receipt.originalUri)
+                    val extension = FileUtils.getFileExtension(sourceUri, context)
+                    val newFileName = FileUtils.generateFileName(
+                        receipt.receiptDate,
+                        receipt.description,
+                        receipt.totalAmount,
+                        extension
+                    )
+                    
+                    val categoryFolder = FileUtils.getCategoryFolder(context, receipt.category)
+                    val destFile = FileUtils.copyToExportFolder(
+                        context,
+                        sourceUri,
+                        categoryFolder.absolutePath,
+                        newFileName
+                    )
+                    
+                    receipt.copy(
+                        storedUri = destFile?.let { Uri.fromFile(it).toString() },
+                        renamedFileName = newFileName
+                    )
+                } else {
+                    receipt
+                }
+                
+                repository.updateReceipt(updatedReceipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error updating receipt"
             }

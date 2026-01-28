@@ -14,6 +14,7 @@ data class Receipt(
     val vatAmount: Double?,
     val currency: String,
     val category: String,
+    val description: String?,
     val notes: String?,
     val tags: List<String> = emptyList(),
     val ocrRawText: String?,
@@ -22,6 +23,6 @@ data class Receipt(
     val storedUri: String?,
     val renamedFileName: String?,
     val exportFolderUri: String?,
-    val exportStatus: ExportStatus = ExportStatus.NOT_EXPORTED,
+    val exportStatus: ExportStatus = ExportStatus.EXPORTED,
     val lastExportAttemptAt: Long? = null
 )

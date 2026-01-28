@@ -1,17 +1,25 @@
 package com.expenses.app.ui.screens
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Image as ImageIcon
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.expenses.app.data.Receipt
 import java.text.SimpleDateFormat
 import java.util.*
@@ -28,12 +36,54 @@ fun EditReceiptScreen(
     var vatAmount by remember { mutableStateOf(receipt?.vatAmount?.toString() ?: "") }
     var currency by remember { mutableStateOf(receipt?.currency ?: "USD") }
     var category by remember { mutableStateOf(receipt?.category ?: "Uncategorized") }
+    var description by remember { mutableStateOf(receipt?.description ?: "") }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
     
-    val categories = listOf(
-        "Uncategorized", "Fuel", "Lunch", "Dinner", 
-        "Hotel", "Transport", "Office Supplies", "Entertainment"
-    )
+    var categories by remember { 
+        mutableStateOf(listOf(
+            "Uncategorized", "Fuel", "Lunch", "Dinner", 
+            "Hotel", "Transport", "Office Supplies", "Entertainment"
+        ))
+    }
+
+    if (showAddCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("Add New Category") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Category Name") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank() && !categories.contains(newCategoryName)) {
+                            categories = categories + newCategoryName
+                            category = newCategoryName
+                        }
+                        newCategoryName = ""
+                        showAddCategoryDialog = false
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    newCategoryName = ""
+                    showAddCategoryDialog = false 
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -54,6 +104,7 @@ fun EditReceiptScreen(
                                     vatAmount = vatAmount.toDoubleOrNull(),
                                     currency = currency,
                                     category = category,
+                                    description = description.takeIf { it.isNotBlank() },
                                     notes = notes.takeIf { it.isNotBlank() }
                                 )
                                 onSave(updatedReceipt)
@@ -76,6 +127,62 @@ fun EditReceiptScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Receipt Image Preview
+            receipt?.let { rec ->
+                val imageUri = rec.storedUri ?: rec.originalUri
+                if (imageUri != null) {
+                    var showFullImage by remember { mutableStateOf(false) }
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(Uri.parse(imageUri)),
+                                contentDescription = "Receipt Image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { showFullImage = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.ImageIcon, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("View Full Image")
+                            }
+                        }
+                    }
+                    
+                    if (showFullImage) {
+                        AlertDialog(
+                            onDismissRequest = { showFullImage = false },
+                            confirmButton = {
+                                TextButton(onClick = { showFullImage = false }) {
+                                    Text("Close")
+                                }
+                            },
+                            text = {
+                                Image(
+                                    painter = rememberAsyncImagePainter(Uri.parse(imageUri)),
+                                    contentDescription = "Full Receipt Image",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 500.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            
             // Merchant
             OutlinedTextField(
                 value = merchant,
@@ -146,7 +253,18 @@ fun EditReceiptScreen(
             }
 
             // Category
-            Text("Category", style = MaterialTheme.typography.labelLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Category", style = MaterialTheme.typography.labelLarge)
+                TextButton(onClick = { showAddCategoryDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Category")
+                }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.chunked(2).forEach { rowCategories ->
                     Row(
@@ -167,6 +285,15 @@ fun EditReceiptScreen(
                     }
                 }
             }
+
+            // Description
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
+                placeholder = { Text("Brief description of the receipt") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             // Notes
             OutlinedTextField(
