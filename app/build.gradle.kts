@@ -30,24 +30,24 @@ android {
             )
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    
+
     kotlinOptions {
         jvmTarget = "17"
     }
-    
+
     buildFeatures {
         compose = true
     }
-    
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
-    
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -56,13 +56,6 @@ android {
 }
 
 dependencies {
-    // OpenTelemetry
-    implementation(enforcedPlatform("io.opentelemetry:opentelemetry-bom:1.18.0"))
-    implementation("io.opentelemetry:opentelemetry-api")
-    
-    // Microsoft Display Mask
-    implementation("com.microsoft.device.display:display-mask:0.3.0")
-    
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
@@ -75,48 +68,50 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
-    
+
     // Room Database
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
-    
+
     // CameraX
     val cameraxVersion = "1.3.1"
     implementation("androidx.camera:camera-core:$cameraxVersion")
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
-    
+
     // ML Kit Text Recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
-    
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    
+
     // Permissions
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-    
+
     // PDFBox (for future PDF generation)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
-    
+
     // JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
-    
+
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
-    
+
     // Microsoft Graph SDK for OneDrive
     implementation("com.microsoft.graph:microsoft-graph:6.7.0")
-    implementation("com.microsoft.identity.client:msal:5.0.0")
-    
+    implementation("com.microsoft.identity.client:msal:5.0.0") {
+        exclude(group = "io.opentelemetry")
+    }
+
     // OkHttp for HTTP requests
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
+
     // Debugging
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
