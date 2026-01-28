@@ -6,7 +6,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,8 @@ fun EditReceiptScreen(
     categories: List<String>,
     onBack: () -> Unit,
     onSave: (Receipt) -> Unit,
+    onDelete: (Receipt) -> Unit,
+    onUploadToOneDrive: (Receipt) -> Unit,
     onAddCategory: (String) -> Unit,
     onDeleteCategory: (String) -> Unit
 ) {
@@ -38,6 +42,7 @@ fun EditReceiptScreen(
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var showDeleteCategoryDialog by remember { mutableStateOf(false) }
     var categoryToDelete by remember { mutableStateOf<String?>(null) }
+    var showDeleteReceiptDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -49,6 +54,12 @@ fun EditReceiptScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { showDeleteReceiptDialog = true },
+                        enabled = receipt != null
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete Receipt")
+                    }
                     IconButton(
                         onClick = {
                             receipt?.let {
@@ -205,6 +216,18 @@ fun EditReceiptScreen(
                     .height(120.dp),
                 maxLines = 5
             )
+            
+            // Upload to OneDrive Button
+            receipt?.let {
+                Button(
+                    onClick = { onUploadToOneDrive(it) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Upload, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Upload to OneDrive")
+                }
+            }
 
             // OCR Confidence
             receipt?.ocrConfidence?.let { confidence ->
@@ -298,6 +321,33 @@ fun EditReceiptScreen(
                     showDeleteCategoryDialog = false
                     categoryToDelete = null
                 }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Receipt Confirmation Dialog
+    if (showDeleteReceiptDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteReceiptDialog = false },
+            title = { Text("Delete Receipt?") },
+            text = { Text("This action cannot be undone. The receipt and its associated image will be permanently deleted.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        receipt?.let { 
+                            onDelete(it)
+                            onBack()
+                        }
+                        showDeleteReceiptDialog = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteReceiptDialog = false }) {
                     Text("Cancel")
                 }
             }

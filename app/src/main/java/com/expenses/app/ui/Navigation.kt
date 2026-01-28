@@ -7,4 +7,5 @@ sealed class Screen(val route: String) {
         fun createRoute(receiptId: String) = "edit_receipt/$receiptId"
     }
     object Reports : Screen("reports")
+    object Settings : Screen("settings")
 }

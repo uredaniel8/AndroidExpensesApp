@@ -26,13 +26,17 @@ fun HomeScreen(
     onAddReceipt: () -> Unit,
     onUploadReceipt: () -> Unit,
     onReceiptClick: (String) -> Unit,
-    onViewReports: () -> Unit
+    onViewReports: () -> Unit,
+    onSettings: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Expenses & Receipts") },
                 actions = {
+                    IconButton(onClick = onSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                     IconButton(onClick = onViewReports) {
                         Icon(Icons.Default.Assessment, contentDescription = "View Reports")
                     }
