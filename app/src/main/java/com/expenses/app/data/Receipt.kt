@@ -16,6 +16,7 @@ data class Receipt(
     val currency: String,
     val category: String,
     val notes: String?,
+    val description: String? = null,
 
     val tags: List<String> = emptyList(),
     val ocrRawText: String?,

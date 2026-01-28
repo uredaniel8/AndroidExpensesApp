@@ -1,0 +1,11 @@
+package com.expenses.app.data
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "categories")
+data class Category(
+    @PrimaryKey val name: String,
+    val isDefault: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
+)

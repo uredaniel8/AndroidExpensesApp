@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -20,8 +21,11 @@ import java.util.*
 @Composable
 fun EditReceiptScreen(
     receipt: Receipt?,
+    categories: List<String>,
     onBack: () -> Unit,
-    onSave: (Receipt) -> Unit
+    onSave: (Receipt) -> Unit,
+    onAddCategory: (String) -> Unit,
+    onDeleteCategory: (String) -> Unit
 ) {
     var merchant by remember { mutableStateOf(receipt?.merchant ?: "") }
     var totalAmount by remember { mutableStateOf(receipt?.totalAmount?.toString() ?: "") }
@@ -29,11 +33,11 @@ fun EditReceiptScreen(
     var currency by remember { mutableStateOf(receipt?.currency ?: "USD") }
     var category by remember { mutableStateOf(receipt?.category ?: "Uncategorized") }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
+    var description by remember { mutableStateOf(receipt?.description ?: "") }
     
-    val categories = listOf(
-        "Uncategorized", "Fuel", "Lunch", "Dinner", 
-        "Hotel", "Transport", "Office Supplies", "Entertainment"
-    )
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var showDeleteCategoryDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -54,7 +58,8 @@ fun EditReceiptScreen(
                                     vatAmount = vatAmount.toDoubleOrNull(),
                                     currency = currency,
                                     category = category,
-                                    notes = notes.takeIf { it.isNotBlank() }
+                                    notes = notes.takeIf { it.isNotBlank() },
+                                    description = description.takeIf { it.isNotBlank() }
                                 )
                                 onSave(updatedReceipt)
                                 onBack()
@@ -81,6 +86,14 @@ fun EditReceiptScreen(
                 value = merchant,
                 onValueChange = { merchant = it },
                 label = { Text("Merchant") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Description
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -146,7 +159,21 @@ fun EditReceiptScreen(
             }
 
             // Category
-            Text("Category", style = MaterialTheme.typography.labelLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Category", style = MaterialTheme.typography.labelLarge)
+                Row {
+                    TextButton(onClick = { showAddCategoryDialog = true }) {
+                        Text("+ Add")
+                    }
+                    TextButton(onClick = { showDeleteCategoryDialog = true }) {
+                        Text("- Remove")
+                    }
+                }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.chunked(2).forEach { rowCategories ->
                     Row(
@@ -196,5 +223,84 @@ fun EditReceiptScreen(
                 }
             }
         }
+    }
+    
+    // Add Category Dialog
+    if (showAddCategoryDialog) {
+        var newCategoryName by remember { mutableStateOf("") }
+        
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("Add New Category") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Category Name") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onAddCategory(newCategoryName.trim())
+                            showAddCategoryDialog = false
+                            newCategoryName = ""
+                        }
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCategoryDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete Category Dialog
+    if (showDeleteCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteCategoryDialog = false },
+            title = { Text("Remove Category") },
+            text = {
+                Column {
+                    Text("Select a category to remove:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    categories.filter { it != "Uncategorized" }.forEach { cat ->
+                        TextButton(
+                            onClick = {
+                                categoryToDelete = cat
+                            }
+                        ) {
+                            Text(cat)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        categoryToDelete?.let { onDeleteCategory(it) }
+                        showDeleteCategoryDialog = false
+                        categoryToDelete = null
+                    },
+                    enabled = categoryToDelete != null
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDeleteCategoryDialog = false
+                    categoryToDelete = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

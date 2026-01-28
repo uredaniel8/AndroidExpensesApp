@@ -7,8 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.expenses.app.data.Receipt
 import com.expenses.app.data.ReceiptDatabase
 import com.expenses.app.data.ReceiptRepository
+import com.expenses.app.data.Category
+import com.expenses.app.data.CategoryRepository
 import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
+import com.expenses.app.util.FileUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,9 +23,13 @@ import kotlinx.coroutines.launch
 class ReceiptViewModel(application: Application) : AndroidViewModel(application) {
     private val database = ReceiptDatabase.getDatabase(application)
     private val repository = ReceiptRepository(database.receiptDao())
+    private val categoryRepository = CategoryRepository(database.categoryDao())
     private val ocrProcessor = OcrProcessor()
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isProcessing = MutableStateFlow(false)
@@ -30,6 +37,13 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    init {
+        // Initialize default categories
+        viewModelScope.launch {
+            categoryRepository.initializeDefaultCategories()
+        }
+    }
 
     fun processReceipt(imageUri: Uri) {
         viewModelScope.launch {
@@ -71,7 +85,23 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun updateReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
-                repository.updateReceipt(receipt)
+                // Save image with category-based storage if originalUri exists
+                val updatedReceipt = if (receipt.originalUri != null && receipt.storedUri == null) {
+                    val imageUri = Uri.parse(receipt.originalUri)
+                    val (storedPath, fileName) = FileUtils.saveReceiptImage(
+                        context = getApplication(),
+                        sourceUri = imageUri,
+                        receipt = receipt
+                    )
+                    receipt.copy(
+                        storedUri = storedPath,
+                        renamedFileName = fileName
+                    )
+                } else {
+                    receipt
+                }
+                
+                repository.updateReceipt(updatedReceipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error updating receipt"
             }
@@ -94,6 +124,30 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun addCategory(categoryName: String) {
+        viewModelScope.launch {
+            try {
+                if (!categoryRepository.categoryExists(categoryName)) {
+                    categoryRepository.insertCategory(Category(categoryName, isDefault = false))
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error adding category"
+            }
+        }
+    }
+
+    fun deleteCategory(category: Category) {
+        viewModelScope.launch {
+            try {
+                if (!category.isDefault) {
+                    categoryRepository.deleteCategory(category)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error deleting category"
+            }
+        }
     }
 
     override fun onCleared() {

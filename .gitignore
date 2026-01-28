@@ -75,3 +75,4 @@ lint/tmp/
 
 # Kotlin
 *.kotlin_module
+gradle/wrapper/gradle-wrapper.jar
