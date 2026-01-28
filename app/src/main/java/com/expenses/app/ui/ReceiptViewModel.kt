@@ -170,15 +170,15 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     }
     
     /**
-     * Configures ProtonDrive integration.
+     * Configures local storage.
      * 
-     * @param accessToken The OAuth access token for ProtonDrive
-     * @param enabled Whether ProtonDrive integration is enabled
+     * @param accessToken Unused parameter (kept for backward compatibility)
+     * @param enabled Whether local storage is enabled
      */
     fun configureProtonDrive(accessToken: String, enabled: Boolean) {
         protonDriveService.setConfig(
             ProtonDriveService.ProtonDriveConfig(
-                accessToken = accessToken,
+                accessToken = "",
                 enabled = enabled
             )
         )
@@ -187,27 +187,27 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
             viewModelScope.launch {
                 try {
                     protonDriveService.ensureFoldersExist()
-                    _uploadStatus.value = "ProtonDrive configured successfully"
+                    _uploadStatus.value = "Local storage configured successfully"
                 } catch (e: Exception) {
-                    _error.value = "Failed to configure ProtonDrive: ${e.message}"
+                    _error.value = "Failed to configure local storage: ${e.message}"
                 }
             }
         }
     }
     
     /**
-     * Uploads a receipt to ProtonDrive.
+     * Saves a receipt to local storage.
      * 
-     * @param receipt The receipt to upload
+     * @param receipt The receipt to save
      */
     fun uploadToProtonDrive(receipt: Receipt) {
         viewModelScope.launch {
             try {
                 _isProcessing.value = true
-                _uploadStatus.value = "Uploading to ProtonDrive..."
+                _uploadStatus.value = "Saving to local storage..."
                 
                 if (!protonDriveService.isConfigured()) {
-                    _error.value = "ProtonDrive is not configured. Please configure ProtonDrive in settings."
+                    _error.value = "Local storage is not enabled. Please enable local storage in settings."
                     _uploadStatus.value = null
                     _isProcessing.value = false
                     return@launch
@@ -225,12 +225,12 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 val result = protonDriveService.uploadReceipt(receipt, imageUri)
                 
                 if (result.isSuccess) {
-                    val protonDrivePath = result.getOrNull()
-                    _uploadStatus.value = "Successfully uploaded to ProtonDrive"
+                    val localPath = result.getOrNull()
+                    _uploadStatus.value = "Successfully saved to local storage"
                     
-                    // Update receipt with ProtonDrive path and export status
+                    // Update receipt with local storage path and export status
                     val updatedReceipt = receipt.copy(
-                        exportFolderUri = protonDrivePath,
+                        exportFolderUri = localPath,
                         exportStatus = ExportStatus.EXPORTED,
                         lastExportAttemptAt = System.currentTimeMillis()
                     )
@@ -241,7 +241,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     _uploadStatus.value = null
                 } else {
                     val error = result.exceptionOrNull()
-                    _error.value = "Upload failed: ${error?.message}"
+                    _error.value = "Save failed: ${error?.message}"
                     _uploadStatus.value = null
                     
                     // Update receipt with failed status
@@ -252,7 +252,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     repository.updateReceipt(updatedReceipt)
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error uploading to ProtonDrive"
+                _error.value = e.message ?: "Error saving to local storage"
                 _uploadStatus.value = null
             } finally {
                 _isProcessing.value = false

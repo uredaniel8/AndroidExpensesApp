@@ -2,18 +2,13 @@ package com.expenses.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,10 +17,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onConfigureProtonDrive: (String, Boolean) -> Unit
 ) {
-    var accessToken by remember { mutableStateOf("") }
     var isEnabled by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
-    var showToken by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -48,7 +41,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "ProtonDrive Integration",
+                text = "Local Storage",
                 style = MaterialTheme.typography.headlineSmall
             )
 
@@ -60,7 +53,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Configure ProtonDrive to automatically upload receipts:",
+                        text = "Configure local storage to automatically save receipts:",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     
@@ -75,6 +68,12 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    
+                    Text(
+                        text = "Files are stored in the app's external storage directory.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -83,47 +82,27 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Enable ProtonDrive Integration")
+                Text("Enable Local Storage")
                 Switch(
                     checked = isEnabled,
                     onCheckedChange = { isEnabled = it }
                 )
             }
 
-            if (isEnabled) {
-                OutlinedTextField(
-                    value = accessToken,
-                    onValueChange = { accessToken = it },
-                    label = { Text("ProtonDrive Access Token") },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Paste your ProtonDrive access token here") },
-                    minLines = 3,
-                    visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { showToken = !showToken }) {
-                            Icon(
-                                if (showToken) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (showToken) "Hide token" else "Show token"
-                            )
-                        }
-                    }
-                )
+            TextButton(
+                onClick = { showInfo = true }
+            ) {
+                Text("Where are files saved?")
+            }
 
-                TextButton(
-                    onClick = { showInfo = true }
-                ) {
-                    Text("How to get an access token?")
-                }
-
-                Button(
-                    onClick = {
-                        onConfigureProtonDrive(accessToken.trim(), isEnabled)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = accessToken.trim().length >= 20 // Basic validation for minimum token length
-                ) {
-                    Text("Save Configuration")
-                }
+            Button(
+                onClick = {
+                    onConfigureProtonDrive("", isEnabled)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = true
+            ) {
+                Text("Save Configuration")
             }
         }
     }
@@ -132,17 +111,19 @@ fun SettingsScreen(
     if (showInfo) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
-            title = { Text("Getting ProtonDrive Access Token") },
+            title = { Text("Local Storage Information") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("To get a ProtonDrive access token:")
-                    Text("1. Visit https://account.proton.me")
-                    Text("2. Navigate to Account Settings")
-                    Text("3. Go to Security → API Access")
-                    Text("4. Generate an access token for ProtonDrive")
+                    Text("Receipt images are saved to:")
+                    Text("")
+                    Text("Android/data/com.expenses.app/files/Receipts/")
+                    Text("")
+                    Text("Files are organized by category:")
+                    Text("• Fuel receipts → Receipts/Fuel")
+                    Text("• Other receipts → Receipts/Other")
                     Text("")
                     Text(
-                        "Note: This is a simplified setup. In production, you should use OAuth2 authentication flow.",
+                        "These files are stored in your device's external storage and are accessible only to this app.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

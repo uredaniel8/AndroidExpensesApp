@@ -217,7 +217,7 @@ fun EditReceiptScreen(
                 maxLines = 5
             )
             
-            // Upload to ProtonDrive Button
+            // Save Locally Button
             receipt?.let {
                 Button(
                     onClick = { onUploadToProtonDrive(it) },
@@ -225,7 +225,7 @@ fun EditReceiptScreen(
                 ) {
                     Icon(Icons.Default.Upload, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Upload to ProtonDrive")
+                    Text("Save to Local Storage")
                 }
             }
 
