@@ -17,7 +17,10 @@ import java.io.FileOutputStream
  * - Other category receipts go to "Receipts/Other" folder
  * - Stores files in the app's external files directory
  * 
- * Note: Category matching is case-insensitive, so "Fuel", "FUEL", "fuel" all match.
+ * Note: 
+ * - Category matching is case-insensitive, so "Fuel", "FUEL", "fuel" all match.
+ * - Uses getExternalFilesDir which doesn't require WRITE_EXTERNAL_STORAGE permission
+ *   as it's the app-specific external storage directory.
  */
 class ProtonDriveService(private val context: Context) {
     
@@ -81,14 +84,22 @@ class ProtonDriveService(private val context: Context) {
             // Create the destination folder
             val baseFolder = File(context.getExternalFilesDir(null), folderPath)
             if (!baseFolder.exists()) {
-                baseFolder.mkdirs()
+                val created = baseFolder.mkdirs()
+                if (!created) {
+                    return@withContext Result.failure(Exception("Failed to create storage directory. Please check storage permissions."))
+                }
             }
             
             // Copy file to local storage
             val destFile = File(baseFolder, fileName)
             val sourceUri = Uri.parse(imageUri)
             
-            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            val inputStream = context.contentResolver.openInputStream(sourceUri)
+            if (inputStream == null) {
+                return@withContext Result.failure(Exception("Failed to open image file. The file may be inaccessible."))
+            }
+            
+            inputStream.use { input ->
                 FileOutputStream(destFile).use { output ->
                     input.copyTo(output)
                 }
@@ -120,19 +131,28 @@ class ProtonDriveService(private val context: Context) {
             // Create base Receipts folder
             val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
             if (!baseFolder.exists()) {
-                baseFolder.mkdirs()
+                val created = baseFolder.mkdirs()
+                if (!created) {
+                    return@withContext Result.failure(Exception("Failed to create Receipts directory"))
+                }
             }
             
             // Create Fuel subfolder
             val fuelFolder = File(context.getExternalFilesDir(null), FUEL_FOLDER_PATH)
             if (!fuelFolder.exists()) {
-                fuelFolder.mkdirs()
+                val created = fuelFolder.mkdirs()
+                if (!created) {
+                    return@withContext Result.failure(Exception("Failed to create Fuel directory"))
+                }
             }
             
             // Create Other subfolder
             val otherFolder = File(context.getExternalFilesDir(null), OTHER_FOLDER_PATH)
             if (!otherFolder.exists()) {
-                otherFolder.mkdirs()
+                val created = otherFolder.mkdirs()
+                if (!created) {
+                    return@withContext Result.failure(Exception("Failed to create Other directory"))
+                }
             }
             
             Result.success(Unit)

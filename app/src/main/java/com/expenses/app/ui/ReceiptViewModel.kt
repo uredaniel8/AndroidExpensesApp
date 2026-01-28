@@ -228,7 +228,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     val localPath = result.getOrNull()
                     _uploadStatus.value = "Successfully saved to local storage"
                     
-                    // Update receipt with local path and export status
+                    // Update receipt with local storage path and export status
                     val updatedReceipt = receipt.copy(
                         exportFolderUri = localPath,
                         exportStatus = ExportStatus.EXPORTED,

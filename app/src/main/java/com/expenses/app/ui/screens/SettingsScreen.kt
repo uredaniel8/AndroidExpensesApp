@@ -99,7 +99,8 @@ fun SettingsScreen(
                 onClick = {
                     onConfigureProtonDrive("", isEnabled)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = true
             ) {
                 Text("Save Configuration")
             }
