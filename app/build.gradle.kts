@@ -56,6 +56,13 @@ android {
 }
 
 dependencies {
+    // OpenTelemetry
+    implementation(enforcedPlatform("io.opentelemetry:opentelemetry-bom:1.18.0"))
+    implementation("io.opentelemetry:opentelemetry-api")
+    
+    // Microsoft Display Mask
+    implementation("com.microsoft.device.display:display-mask:0.3.0")
+    
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")

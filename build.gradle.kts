@@ -15,5 +15,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://aka.ms/microsoft/maven") }
     }
 }
