@@ -14,6 +14,7 @@ import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
 import com.expenses.app.util.ProtonDriveService
+import com.expenses.app.util.FolderPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +29,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val categoryRepository = CategoryRepository(database.categoryDao())
     private val ocrProcessor = OcrProcessor()
     private val protonDriveService = ProtonDriveService(application)
+    private val folderPreferences = FolderPreferences(application)
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -43,11 +45,89 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     
     private val _uploadStatus = MutableStateFlow<String?>(null)
     val uploadStatus: StateFlow<String?> = _uploadStatus.asStateFlow()
+    
+    private val _fuelFolderUri = MutableStateFlow<Uri?>(null)
+    val fuelFolderUri: StateFlow<Uri?> = _fuelFolderUri.asStateFlow()
+    
+    private val _otherFolderUri = MutableStateFlow<Uri?>(null)
+    val otherFolderUri: StateFlow<Uri?> = _otherFolderUri.asStateFlow()
 
     init {
         // Initialize default categories
         viewModelScope.launch {
             categoryRepository.initializeDefaultCategories()
+        }
+        
+        // Load saved folder preferences
+        _fuelFolderUri.value = folderPreferences.getFuelFolderUri()
+        _otherFolderUri.value = folderPreferences.getOtherFolderUri()
+        
+        // Set loaded URIs in services
+        protonDriveService.setCustomFuelFolder(_fuelFolderUri.value)
+        protonDriveService.setCustomOtherFolder(_otherFolderUri.value)
+        FileUtils.setCustomFuelFolder(_fuelFolderUri.value)
+        FileUtils.setCustomOtherFolder(_otherFolderUri.value)
+    }
+    
+    /**
+     * Sets the custom folder for fuel receipts.
+     * Persists the URI and requests persistent permissions.
+     */
+    fun setFuelFolder(uri: Uri?) {
+        viewModelScope.launch {
+            try {
+                if (uri != null) {
+                    // Take persistent permission for the URI
+                    val contentResolver = getApplication<Application>().contentResolver
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        _error.value = "Failed to obtain persistent folder access: ${e.message}"
+                        return@launch
+                    }
+                }
+                folderPreferences.setFuelFolderUri(uri)
+                _fuelFolderUri.value = uri
+                protonDriveService.setCustomFuelFolder(uri)
+                FileUtils.setCustomFuelFolder(uri)
+            } catch (e: Exception) {
+                _error.value = "Failed to set fuel folder: ${e.message}"
+            }
+        }
+    }
+    
+    /**
+     * Sets the custom folder for other receipts.
+     * Persists the URI and requests persistent permissions.
+     */
+    fun setOtherFolder(uri: Uri?) {
+        viewModelScope.launch {
+            try {
+                if (uri != null) {
+                    // Take persistent permission for the URI
+                    val contentResolver = getApplication<Application>().contentResolver
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        _error.value = "Failed to obtain persistent folder access: ${e.message}"
+                        return@launch
+                    }
+                }
+                folderPreferences.setOtherFolderUri(uri)
+                _otherFolderUri.value = uri
+                protonDriveService.setCustomOtherFolder(uri)
+                FileUtils.setCustomOtherFolder(uri)
+            } catch (e: Exception) {
+                _error.value = "Failed to set other folder: ${e.message}"
+            }
         }
     }
 

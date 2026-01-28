@@ -9,6 +9,27 @@ import java.util.*
 
 object FileUtils {
     
+    // Store custom folder URIs
+    @Volatile
+    private var customFuelFolderUri: Uri? = null
+    
+    @Volatile
+    private var customOtherFolderUri: Uri? = null
+    
+    /**
+     * Sets the custom folder URI for fuel receipts.
+     */
+    fun setCustomFuelFolder(uri: Uri?) {
+        customFuelFolderUri = uri
+    }
+    
+    /**
+     * Sets the custom folder URI for other receipts.
+     */
+    fun setCustomOtherFolder(uri: Uri?) {
+        customOtherFolderUri = uri
+    }
+    
     fun generateFileName(
         date: Long,
         merchant: String?,
