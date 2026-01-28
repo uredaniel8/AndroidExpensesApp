@@ -42,6 +42,8 @@ fun ExpensesApp() {
     val viewModel: ReceiptViewModel = viewModel()
     val receipts by viewModel.receipts.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val fuelFolderUri by viewModel.fuelFolderUri.collectAsState()
+    val otherFolderUri by viewModel.otherFolderUri.collectAsState()
     val scope = rememberCoroutineScope()
 
     NavHost(
@@ -137,7 +139,15 @@ fun ExpensesApp() {
                 onBack = { navController.popBackStack() },
                 onConfigureProtonDrive = { accessToken, enabled ->
                     viewModel.configureProtonDrive(accessToken, enabled)
-                }
+                },
+                onFuelFolderSelected = { uri ->
+                    viewModel.setFuelFolder(uri)
+                },
+                onOtherFolderSelected = { uri ->
+                    viewModel.setOtherFolder(uri)
+                },
+                fuelFolderUri = fuelFolderUri,
+                otherFolderUri = otherFolderUri
             )
         }
     }
