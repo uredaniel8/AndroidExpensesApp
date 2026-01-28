@@ -101,7 +101,7 @@ class ProtonDriveService(private val context: Context) {
             val sourceUri = Uri.parse(imageUri)
             val isFuelReceipt = receipt.category.equals("Fuel", ignoreCase = true)
             
-            // Check if custom folder is set for this category
+            // Make a local copy of the custom folder URI to ensure thread safety
             val customFolderUri = if (isFuelReceipt) customFuelFolderUri else customOtherFolderUri
             
             if (customFolderUri != null) {
@@ -156,7 +156,11 @@ class ProtonDriveService(private val context: Context) {
             }
             
             inputStream.use { input ->
-                context.contentResolver.openOutputStream(destFile.uri)?.use { output ->
+                val outputStream = context.contentResolver.openOutputStream(destFile.uri)
+                if (outputStream == null) {
+                    return@withContext Result.failure(Exception("Failed to create output stream for custom folder"))
+                }
+                outputStream.use { output ->
                     input.copyTo(output)
                 }
             }

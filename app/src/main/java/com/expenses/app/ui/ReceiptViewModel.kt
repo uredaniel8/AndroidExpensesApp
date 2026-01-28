@@ -62,11 +62,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
         _fuelFolderUri.value = folderPreferences.getFuelFolderUri()
         _otherFolderUri.value = folderPreferences.getOtherFolderUri()
         
-        // Set loaded URIs in services
+        // Set loaded URIs in ProtonDriveService
         protonDriveService.setCustomFuelFolder(_fuelFolderUri.value)
         protonDriveService.setCustomOtherFolder(_otherFolderUri.value)
-        FileUtils.setCustomFuelFolder(_fuelFolderUri.value)
-        FileUtils.setCustomOtherFolder(_otherFolderUri.value)
     }
     
     /**
@@ -76,8 +74,23 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun setFuelFolder(uri: Uri?) {
         viewModelScope.launch {
             try {
-                if (uri != null) {
-                    // Take persistent permission for the URI
+                // Release old permission if resetting
+                if (uri == null) {
+                    val oldUri = _fuelFolderUri.value
+                    if (oldUri != null) {
+                        try {
+                            val contentResolver = getApplication<Application>().contentResolver
+                            contentResolver.releasePersistableUriPermission(
+                                oldUri,
+                                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                        } catch (e: Exception) {
+                            // Ignore if permission already released
+                        }
+                    }
+                } else {
+                    // Take persistent permission for the new URI
                     val contentResolver = getApplication<Application>().contentResolver
                     try {
                         contentResolver.takePersistableUriPermission(
@@ -85,15 +98,20 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                             android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
                             android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
+                    } catch (e: SecurityException) {
+                        _error.value = "Cannot access selected folder. Please try selecting a different folder."
+                        return@launch
+                    } catch (e: UnsupportedOperationException) {
+                        _error.value = "Selected folder does not support persistent access. Please choose a folder from your device storage."
+                        return@launch
                     } catch (e: Exception) {
-                        _error.value = "Failed to obtain persistent folder access: ${e.message}"
+                        _error.value = "Failed to obtain folder access: ${e.message}"
                         return@launch
                     }
                 }
                 folderPreferences.setFuelFolderUri(uri)
                 _fuelFolderUri.value = uri
                 protonDriveService.setCustomFuelFolder(uri)
-                FileUtils.setCustomFuelFolder(uri)
             } catch (e: Exception) {
                 _error.value = "Failed to set fuel folder: ${e.message}"
             }
@@ -107,8 +125,23 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun setOtherFolder(uri: Uri?) {
         viewModelScope.launch {
             try {
-                if (uri != null) {
-                    // Take persistent permission for the URI
+                // Release old permission if resetting
+                if (uri == null) {
+                    val oldUri = _otherFolderUri.value
+                    if (oldUri != null) {
+                        try {
+                            val contentResolver = getApplication<Application>().contentResolver
+                            contentResolver.releasePersistableUriPermission(
+                                oldUri,
+                                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
+                        } catch (e: Exception) {
+                            // Ignore if permission already released
+                        }
+                    }
+                } else {
+                    // Take persistent permission for the new URI
                     val contentResolver = getApplication<Application>().contentResolver
                     try {
                         contentResolver.takePersistableUriPermission(
@@ -116,15 +149,20 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                             android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
                             android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
+                    } catch (e: SecurityException) {
+                        _error.value = "Cannot access selected folder. Please try selecting a different folder."
+                        return@launch
+                    } catch (e: UnsupportedOperationException) {
+                        _error.value = "Selected folder does not support persistent access. Please choose a folder from your device storage."
+                        return@launch
                     } catch (e: Exception) {
-                        _error.value = "Failed to obtain persistent folder access: ${e.message}"
+                        _error.value = "Failed to obtain folder access: ${e.message}"
                         return@launch
                     }
                 }
                 folderPreferences.setOtherFolderUri(uri)
                 _otherFolderUri.value = uri
                 protonDriveService.setCustomOtherFolder(uri)
-                FileUtils.setCustomOtherFolder(uri)
             } catch (e: Exception) {
                 _error.value = "Failed to set other folder: ${e.message}"
             }

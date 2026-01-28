@@ -80,9 +80,49 @@ class FolderPreferences(context: Context) {
     }
     
     /**
-     * Clears all folder preferences.
+     * Clears all folder preferences and releases URI permissions.
+     * Note: This method requires a Context to release URI permissions.
+     * Call clearWithoutReleasingPermissions() if you want to clear preferences only.
      */
-    fun clear() {
+    fun clear(context: Context) {
+        // Get URIs before clearing
+        val fuelUri = getFuelFolderUri()
+        val otherUri = getOtherFolderUri()
+        
+        // Release permissions
+        val contentResolver = context.contentResolver
+        fuelUri?.let { uri ->
+            try {
+                contentResolver.releasePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                // Ignore if permission already released
+            }
+        }
+        otherUri?.let { uri ->
+            try {
+                contentResolver.releasePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                // Ignore if permission already released
+            }
+        }
+        
+        // Clear preferences
+        preferences.edit().clear().apply()
+    }
+    
+    /**
+     * Clears all folder preferences without releasing URI permissions.
+     * Use this if you're managing permissions separately.
+     */
+    fun clearWithoutReleasingPermissions() {
         preferences.edit().clear().apply()
     }
 }
