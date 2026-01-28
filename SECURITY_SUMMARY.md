@@ -19,7 +19,7 @@ This document provides a security assessment of the changes made to implement ca
 - Token not persisted to disk (in-memory only)
 - Basic token validation (minimum 20 characters)
 
-### Recommendations for Production**:
+**Recommendations for Production**:
 - Store tokens in Android Keystore for encryption at rest
 - Implement OAuth2 flow instead of manual token entry
 - Add token expiration and automatic refresh
@@ -29,7 +29,7 @@ This document provides a security assessment of the changes made to implement ca
 **Issue**: Code review identified multiple uses of `!!` operator that could cause NPEs.
 
 **Mitigations Applied**:
-- Removed all `!!` operators from OneDriveService
+- Removed all `!!` operators from ProtonDriveService
 - Used local variable extraction pattern: `val currentConfig = config`
 - Added null checks before accessing config properties
 - Safe URI handling with proper null checks

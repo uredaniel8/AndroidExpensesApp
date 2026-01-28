@@ -56,7 +56,7 @@ Fix critical camera crash, implement receipt deletion feature, and add ProtonDri
 - Category-based folder routing (case-insensitive)
 
 **Files Created**:
-- `app/src/main/java/com/expenses/app/util/OneDriveService.kt`
+- `app/src/main/java/com/expenses/app/util/ProtonDriveService.kt`
 - `app/src/main/java/com/expenses/app/ui/screens/SettingsScreen.kt`
 
 **Files Modified**:
@@ -71,7 +71,7 @@ Fix critical camera crash, implement receipt deletion feature, and add ProtonDri
 ## 🏗️ Technical Implementation
 
 ### Architecture
-- **Service Layer**: `OneDriveService` handles all API communication
+- **Service Layer**: `ProtonDriveService` handles all API communication
 - **ViewModel Layer**: Coordinates upload process and status tracking
 - **UI Layer**: Settings screen for config, upload button in edit screen
 - **Data Layer**: Receipt status updates (EXPORTED/FAILED)

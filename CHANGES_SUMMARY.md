@@ -116,12 +116,12 @@ onDelete = { receiptToDelete ->
 ### Architecture
 
 #### Service Layer
-**File**: `app/src/main/java/com/expenses/app/util/OneDriveService.kt`
+**File**: `app/src/main/java/com/expenses/app/util/ProtonDriveService.kt`
 
 New service class handling ProtonDrive operations:
 
 ```kotlin
-class OneDriveService(private val context: Context) {
+class ProtonDriveService(private val context: Context) {
     - setConfig(): Configure access token and enable/disable
     - isConfigured(): Check if ProtonDrive is ready
     - uploadReceipt(): Upload receipt to appropriate folder
@@ -149,8 +149,8 @@ ProtonDrive/Receipts/
 Added ProtonDrive functionality:
 
 ```kotlin
-- configureOneDrive(): Set up access token and enable integration
-- uploadToOneDrive(): Upload receipt with status tracking
+- configureProtonDrive(): Set up access token and enable integration
+- uploadToProtonDrive(): Upload receipt with status tracking
 - clearUploadStatus(): Clear upload status messages
 ```
 
@@ -229,7 +229,7 @@ Added INTERNET permission:
 ```
 app/src/main/java/com/expenses/app/
 ├── util/
-│   └── OneDriveService.kt (NEW)
+│   └── ProtonDriveService.kt (NEW)
 └── ui/screens/
     └── SettingsScreen.kt (NEW)
 
