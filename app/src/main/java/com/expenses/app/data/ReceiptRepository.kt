@@ -3,7 +3,7 @@ package com.expenses.app.data
 import kotlinx.coroutines.flow.Flow
 
 class ReceiptRepository(private val receiptDao: ReceiptDao) {
-    
+
     fun getAllReceipts(): Flow<List<Receipt>> = receiptDao.getAllReceipts()
 
     suspend fun getReceiptById(id: String): Receipt? = receiptDao.getReceiptById(id)

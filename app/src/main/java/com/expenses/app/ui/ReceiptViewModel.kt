@@ -4,11 +4,17 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.expenses.app.data.*
+import com.expenses.app.data.Receipt
+import com.expenses.app.data.ReceiptDatabase
+import com.expenses.app.data.ReceiptRepository
 import com.expenses.app.util.CurrencyUtils
 import com.expenses.app.util.OcrProcessor
-import com.expenses.app.util.FileUtils
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ReceiptViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,10 +36,11 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
             try {
                 _isProcessing.value = true
                 _error.value = null
-                
+
+                // ✅ OcrProcessor now takes Context (not ContentResolver)
                 val ocrResult = ocrProcessor.processImage(
-                    imageUri,
-                    getApplication<Application>().contentResolver
+                    imageUri = imageUri,
+                    context = getApplication()
                 )
 
                 val receipt = Receipt(
@@ -44,12 +51,15 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     currency = ocrResult.currency ?: CurrencyUtils.getDefaultCurrency(),
                     category = "Uncategorized",
                     notes = null,
+                    tags = emptyList(),
                     ocrRawText = ocrResult.rawText,
                     ocrConfidence = ocrResult.confidence,
                     originalUri = imageUri.toString()
+                    // storedUri / renamedFileName / exportFolderUri default to null now ✅
                 )
 
                 repository.insertReceipt(receipt)
+
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error processing receipt"
             } finally {

@@ -8,6 +8,7 @@ import java.util.UUID
 data class Receipt(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val createdAt: Long = System.currentTimeMillis(),
+
     val receiptDate: Long,
     val merchant: String?,
     val totalAmount: Double,
@@ -15,13 +16,18 @@ data class Receipt(
     val currency: String,
     val category: String,
     val notes: String?,
+
     val tags: List<String> = emptyList(),
     val ocrRawText: String?,
     val ocrConfidence: Float?,
+
     val originalUri: String?,
-    val storedUri: String?,
-    val renamedFileName: String?,
-    val exportFolderUri: String?,
+
+    // ✅ Make these optional with defaults to fix “No value passed…” errors
+    val storedUri: String? = null,
+    val renamedFileName: String? = null,
+    val exportFolderUri: String? = null,
+
     val exportStatus: ExportStatus = ExportStatus.NOT_EXPORTED,
     val lastExportAttemptAt: Long? = null
 )
