@@ -25,6 +25,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _lastProcessedReceiptId = MutableStateFlow<String?>(null)
+    val lastProcessedReceiptId: StateFlow<String?> = _lastProcessedReceiptId.asStateFlow()
+
     fun processReceipt(imageUri: Uri) {
         viewModelScope.launch {
             try {
@@ -47,16 +50,22 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     notes = null,
                     ocrRawText = ocrResult.rawText,
                     ocrConfidence = ocrResult.confidence,
-                    originalUri = imageUri.toString()
+                    originalUri = imageUri.toString(),
+                    exportStatus = ExportStatus.NOT_EXPORTED  // Start as NOT_EXPORTED until user saves
                 )
 
                 repository.insertReceipt(receipt)
+                _lastProcessedReceiptId.value = receipt.id
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error processing receipt"
             } finally {
                 _isProcessing.value = false
             }
         }
+    }
+    
+    fun clearLastProcessedReceiptId() {
+        _lastProcessedReceiptId.value = null
     }
 
     fun updateReceipt(receipt: Receipt) {
@@ -84,10 +93,11 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     
                     receipt.copy(
                         storedUri = destFile?.let { Uri.fromFile(it).toString() },
-                        renamedFileName = newFileName
+                        renamedFileName = newFileName,
+                        exportStatus = ExportStatus.EXPORTED  // Mark as committed when saved
                     )
                 } else {
-                    receipt
+                    receipt.copy(exportStatus = ExportStatus.EXPORTED)
                 }
                 
                 repository.updateReceipt(updatedReceipt)

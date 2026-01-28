@@ -23,6 +23,6 @@ data class Receipt(
     val storedUri: String?,
     val renamedFileName: String?,
     val exportFolderUri: String?,
-    val exportStatus: ExportStatus = ExportStatus.EXPORTED,
+    val exportStatus: ExportStatus = ExportStatus.NOT_EXPORTED,
     val lastExportAttemptAt: Long? = null
 )
