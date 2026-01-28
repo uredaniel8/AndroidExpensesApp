@@ -153,7 +153,7 @@ Security analysis and recommendations:
 - [ ] Test concurrent operations
 
 ### Automated Testing (Future)
-- Unit tests for OneDriveService
+- Unit tests for ProtonDriveService
 - ViewModel tests with mocked service
 - UI tests for delete confirmation
 - Integration tests for upload flow
@@ -182,13 +182,13 @@ Security analysis and recommendations:
 ## 🎨 UI/UX Changes
 
 ### New Screens
-1. **Settings Screen**: OneDrive configuration interface
+1. **Settings Screen**: ProtonDrive configuration interface
 
 ### Modified Screens
 1. **Home Screen**: Added Settings icon in toolbar
 2. **Edit Receipt Screen**: 
    - Added Delete button in action bar
-   - Added Upload to OneDrive button
+   - Added Upload to ProtonDrive button
    - Added confirmation dialogs
 
 ### User Flows
@@ -305,11 +305,11 @@ The implementation is production-ready for demonstration purposes and includes c
 
 ## Commit History
 
-1. **Initial plan** (f60fd97)
-2. **Fix camera crash and add receipt deletion feature** (3629064)
-3. **Add OneDrive integration with category-based folder organization** (a85d64b)
-4. **Address code review feedback - improve security and error handling** (dab1dad)
-5. **Add comprehensive documentation and security summary** (0869a54)
+1. **Initial plan** (524a23b)
+2. **Fix camera crash and add receipt deletion feature** (part of v2.0)
+3. **Add ProtonDrive integration with category-based folder organization** (a652efe)
+4. **Address code review feedback - improve security and error handling** (eb5a84d)
+5. **Add comprehensive documentation and security summary** (25459ee)
 
 ---
 
