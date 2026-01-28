@@ -27,7 +27,7 @@ fun EditReceiptScreen(
     onBack: () -> Unit,
     onSave: (Receipt) -> Unit,
     onDelete: (Receipt) -> Unit,
-    onUploadToOneDrive: (Receipt) -> Unit,
+    onUploadToProtonDrive: (Receipt) -> Unit,
     onAddCategory: (String) -> Unit,
     onDeleteCategory: (String) -> Unit
 ) {
@@ -217,15 +217,15 @@ fun EditReceiptScreen(
                 maxLines = 5
             )
             
-            // Upload to OneDrive Button
+            // Upload to ProtonDrive Button
             receipt?.let {
                 Button(
-                    onClick = { onUploadToOneDrive(it) },
+                    onClick = { onUploadToProtonDrive(it) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Upload, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Upload to OneDrive")
+                    Text("Upload to ProtonDrive")
                 }
             }
 

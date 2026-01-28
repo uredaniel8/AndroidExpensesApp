@@ -13,20 +13,20 @@ import java.io.File
 import java.io.FileOutputStream
 
 /**
- * Service class for handling OneDrive upload operations.
+ * Service class for handling ProtonDrive upload operations.
  * 
  * Features:
- * - Uploads receipts to OneDrive with category-based folder organization
+ * - Uploads receipts to ProtonDrive with category-based folder organization
  * - Fuel category receipts go to "Receipts/Fuel" folder (case-insensitive match)
  * - Other category receipts go to "Receipts/Other" folder
- * - Uses Microsoft Graph API for file uploads
+ * - Uses ProtonDrive API for file uploads
  * 
  * Note: Category matching is case-insensitive, so "Fuel", "FUEL", "fuel" all match.
  */
-class OneDriveService(private val context: Context) {
+class ProtonDriveService(private val context: Context) {
     
     companion object {
-        private const val GRAPH_API_BASE_URL = "https://graph.microsoft.com/v1.0"
+        private const val PROTONDRIVE_API_BASE_URL = "https://drive.proton.me/api"
         private const val FUEL_FOLDER_PATH = "Receipts/Fuel"
         private const val OTHER_FOLDER_PATH = "Receipts/Other"
         
@@ -35,21 +35,21 @@ class OneDriveService(private val context: Context) {
     }
     
     /**
-     * Configuration for OneDrive access.
+     * Configuration for ProtonDrive access.
      * Note: In a production app, the access token should be obtained via OAuth2
      * and stored securely in Android Keystore.
      * This is a simplified implementation for demonstration.
      */
-    data class OneDriveConfig(
+    data class ProtonDriveConfig(
         val accessToken: String,
         val enabled: Boolean = false
     )
     
     // This should be stored securely in Android Keystore in production
     @Volatile
-    private var config: OneDriveConfig? = null
+    private var config: ProtonDriveConfig? = null
     
-    fun setConfig(config: OneDriveConfig) {
+    fun setConfig(config: ProtonDriveConfig) {
         this.config = config
     }
     
@@ -58,11 +58,11 @@ class OneDriveService(private val context: Context) {
     }
     
     /**
-     * Uploads a receipt image to OneDrive.
+     * Uploads a receipt image to ProtonDrive.
      * 
      * @param receipt The receipt to upload
      * @param imageUri The URI of the image to upload
-     * @return Result with the OneDrive file path or error message
+     * @return Result with the ProtonDrive file path or error message
      */
     suspend fun uploadReceipt(receipt: Receipt, imageUri: String): Result<String> = withContext(Dispatchers.IO) {
         val currentConfig = config
@@ -70,7 +70,7 @@ class OneDriveService(private val context: Context) {
         
         try {
             if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
-                return@withContext Result.failure(Exception("OneDrive is not configured. Please set up OneDrive integration in settings."))
+                return@withContext Result.failure(Exception("ProtonDrive is not configured. Please set up ProtonDrive integration in settings."))
             }
             
             val accessToken = currentConfig.accessToken
@@ -97,8 +97,8 @@ class OneDriveService(private val context: Context) {
             // Track if we created a temp file that needs cleanup
             tempFile = if (Uri.parse(imageUri).scheme == "content") file else null
             
-            // Upload to OneDrive
-            val uploadUrl = "$GRAPH_API_BASE_URL/me/drive/root:/$folderPath/$fileName:/content"
+            // Upload to ProtonDrive
+            val uploadUrl = "$PROTONDRIVE_API_BASE_URL/files/upload?path=/$folderPath/$fileName"
             
             val requestBody = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
             
@@ -111,8 +111,8 @@ class OneDriveService(private val context: Context) {
             
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val oneDrivePath = "$folderPath/$fileName"
-                    Result.success(oneDrivePath)
+                    val protonDrivePath = "$folderPath/$fileName"
+                    Result.success(protonDrivePath)
                 } else {
                     val errorBody = response.body?.string() ?: "Unknown error - check network connection and permissions"
                     Result.failure(Exception("Upload failed: ${response.code} - $errorBody"))
@@ -167,7 +167,7 @@ class OneDriveService(private val context: Context) {
     }
     
     /**
-     * Creates the folder structure on OneDrive if it doesn't exist.
+     * Creates the folder structure on ProtonDrive if it doesn't exist.
      * This should be called during initial setup.
      */
     suspend fun ensureFoldersExist(): Result<Unit> = withContext(Dispatchers.IO) {
@@ -175,7 +175,7 @@ class OneDriveService(private val context: Context) {
         
         try {
             if (currentConfig == null || !currentConfig.enabled || currentConfig.accessToken.isBlank()) {
-                return@withContext Result.failure(Exception("OneDrive is not configured"))
+                return@withContext Result.failure(Exception("ProtonDrive is not configured"))
             }
             
             val accessToken = currentConfig.accessToken
@@ -196,7 +196,7 @@ class OneDriveService(private val context: Context) {
     }
     
     private fun createFolder(path: String, accessToken: String) {
-        val url = "$GRAPH_API_BASE_URL/me/drive/root:/$path"
+        val url = "$PROTONDRIVE_API_BASE_URL/folders?path=/$path"
         
         val request = Request.Builder()
             .url(url)
