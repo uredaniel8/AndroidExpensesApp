@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onConfigureProtonDrive: (String, Boolean) -> Unit,
+    onConfigureProtonDrive: (String, Boolean) -> Unit, // kept for compatibility with your app
     onFuelFolderSelected: (Uri?) -> Unit = {},
     onOtherFolderSelected: (Uri?) -> Unit = {},
     fuelFolderUri: Uri? = null,
@@ -28,14 +28,14 @@ fun SettingsScreen(
     var isEnabled by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
     var showFolderInfo by remember { mutableStateOf(false) }
-    
+
     // Folder picker launchers
     val fuelFolderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         uri?.let { onFuelFolderSelected(it) }
     }
-    
+
     val otherFolderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -78,19 +78,19 @@ fun SettingsScreen(
                         text = "Configure local storage to automatically save receipts:",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    
+
                     Text(
                         text = "• Fuel receipts → Receipts/Fuel folder",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Text(
                         text = "• Other receipts → Receipts/Other folder",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     Text(
                         text = "Files are stored in the app's external storage directory.",
                         style = MaterialTheme.typography.bodySmall,
@@ -98,13 +98,12 @@ fun SettingsScreen(
                     )
                 }
             }
-            
-            // Custom Folder Selection Section
+
             Text(
                 text = "Custom Folder Selection",
                 style = MaterialTheme.typography.headlineSmall
             )
-            
+
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -117,10 +116,10 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    HorizontalDivider()
-                    
-                    // Fuel Receipts Folder Selection
+
+                    // ✅ FIX: Divider() is available across more Material3 versions than HorizontalDivider()
+                    Divider()
+
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -158,7 +157,7 @@ fun SettingsScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            
+
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
@@ -168,7 +167,7 @@ fun SettingsScreen(
                                 ) {
                                     Text("Select Folder")
                                 }
-                                
+
                                 if (fuelFolderUri != null) {
                                     OutlinedButton(
                                         onClick = { onFuelFolderSelected(null) }
@@ -179,8 +178,7 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    
-                    // Other Receipts Folder Selection
+
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -218,7 +216,7 @@ fun SettingsScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            
+
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
@@ -228,7 +226,7 @@ fun SettingsScreen(
                                 ) {
                                     Text("Select Folder")
                                 }
-                                
+
                                 if (otherFolderUri != null) {
                                     OutlinedButton(
                                         onClick = { onOtherFolderSelected(null) }
@@ -239,7 +237,7 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    
+
                     TextButton(
                         onClick = { showFolderInfo = true }
                     ) {
@@ -267,18 +265,14 @@ fun SettingsScreen(
             }
 
             Button(
-                onClick = {
-                    onConfigureProtonDrive("", isEnabled)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = true
+                onClick = { onConfigureProtonDrive("", isEnabled) },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Save Configuration")
             }
         }
     }
 
-    // Info Dialog
     if (showInfo) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
@@ -301,42 +295,31 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showInfo = false }) {
-                    Text("OK")
-                }
+                TextButton(onClick = { showInfo = false }) { Text("OK") }
             }
         )
     }
-    
-    // Custom Folder Info Dialog
+
     if (showFolderInfo) {
         AlertDialog(
             onDismissRequest = { showFolderInfo = false },
             title = { Text("Custom Folder Selection") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Custom folders allow you to:",
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    Text("Custom folders allow you to:", style = MaterialTheme.typography.titleSmall)
                     Text("• Choose where receipts are stored on your device")
                     Text("• Easily access receipts from other apps like file managers")
                     Text("• Back up receipts to cloud storage more easily")
                     Text("• Organize receipts with your own folder structure")
                     Text("")
-                    Text(
-                        "Note:",
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    Text("Note:", style = MaterialTheme.typography.titleSmall)
                     Text("• The app needs permission to write to the selected folder")
                     Text("• If a folder is deleted, the app will fall back to default storage")
                     Text("• Custom folders persist across app restarts")
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showFolderInfo = false }) {
-                    Text("OK")
-                }
+                TextButton(onClick = { showFolderInfo = false }) { Text("OK") }
             }
         )
     }

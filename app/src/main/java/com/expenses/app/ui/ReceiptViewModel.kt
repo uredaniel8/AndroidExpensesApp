@@ -4,17 +4,17 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.expenses.app.data.Receipt
-import com.expenses.app.data.ReceiptDatabase
-import com.expenses.app.data.ReceiptRepository
 import com.expenses.app.data.Category
 import com.expenses.app.data.CategoryRepository
 import com.expenses.app.data.ExportStatus
+import com.expenses.app.data.Receipt
+import com.expenses.app.data.ReceiptDatabase
+import com.expenses.app.data.ReceiptRepository
 import com.expenses.app.util.CurrencyUtils
-import com.expenses.app.util.OcrProcessor
 import com.expenses.app.util.FileUtils
-import com.expenses.app.util.ProtonDriveService
 import com.expenses.app.util.FolderPreferences
+import com.expenses.app.util.OcrProcessor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,8 +28,11 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val repository = ReceiptRepository(database.receiptDao())
     private val categoryRepository = CategoryRepository(database.categoryDao())
     private val ocrProcessor = OcrProcessor()
-    private val protonDriveService = ProtonDriveService(application)
     private val folderPreferences = FolderPreferences(application)
+
+    // Local-storage enabled flag (since Proton is removed)
+    private val _localStorageEnabled = MutableStateFlow(false)
+    val localStorageEnabled: StateFlow<Boolean> = _localStorageEnabled.asStateFlow()
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -42,31 +45,26 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
-    
+
     private val _uploadStatus = MutableStateFlow<String?>(null)
     val uploadStatus: StateFlow<String?> = _uploadStatus.asStateFlow()
-    
+
     private val _fuelFolderUri = MutableStateFlow<Uri?>(null)
     val fuelFolderUri: StateFlow<Uri?> = _fuelFolderUri.asStateFlow()
-    
+
     private val _otherFolderUri = MutableStateFlow<Uri?>(null)
     val otherFolderUri: StateFlow<Uri?> = _otherFolderUri.asStateFlow()
 
     init {
-        // Initialize default categories
         viewModelScope.launch {
             categoryRepository.initializeDefaultCategories()
         }
-        
+
         // Load saved folder preferences
         _fuelFolderUri.value = folderPreferences.getFuelFolderUri()
         _otherFolderUri.value = folderPreferences.getOtherFolderUri()
-        
-        // Set loaded URIs in ProtonDriveService
-        protonDriveService.setCustomFuelFolder(_fuelFolderUri.value)
-        protonDriveService.setCustomOtherFolder(_otherFolderUri.value)
     }
-    
+
     /**
      * Sets the custom folder for fuel receipts.
      * Persists the URI and requests persistent permissions.
@@ -83,9 +81,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                             contentResolver.releasePersistableUriPermission(
                                 oldUri,
                                 android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                             )
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             // Ignore if permission already released
                         }
                     }
@@ -96,28 +94,30 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                         contentResolver.takePersistableUriPermission(
                             uri,
                             android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
                     } catch (e: SecurityException) {
-                        _error.value = "Cannot access selected folder. Please try selecting a different folder."
+                        _error.value =
+                            "Cannot access selected folder. Please try selecting a different folder."
                         return@launch
                     } catch (e: UnsupportedOperationException) {
-                        _error.value = "Selected folder does not support persistent access. Please choose a folder from your device storage."
+                        _error.value =
+                            "Selected folder does not support persistent access. Please choose a folder from your device storage."
                         return@launch
                     } catch (e: Exception) {
                         _error.value = "Failed to obtain folder access: ${e.message}"
                         return@launch
                     }
                 }
+
                 folderPreferences.setFuelFolderUri(uri)
                 _fuelFolderUri.value = uri
-                protonDriveService.setCustomFuelFolder(uri)
             } catch (e: Exception) {
                 _error.value = "Failed to set fuel folder: ${e.message}"
             }
         }
     }
-    
+
     /**
      * Sets the custom folder for other receipts.
      * Persists the URI and requests persistent permissions.
@@ -134,9 +134,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                             contentResolver.releasePersistableUriPermission(
                                 oldUri,
                                 android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                             )
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             // Ignore if permission already released
                         }
                     }
@@ -147,22 +147,24 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                         contentResolver.takePersistableUriPermission(
                             uri,
                             android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
                     } catch (e: SecurityException) {
-                        _error.value = "Cannot access selected folder. Please try selecting a different folder."
+                        _error.value =
+                            "Cannot access selected folder. Please try selecting a different folder."
                         return@launch
                     } catch (e: UnsupportedOperationException) {
-                        _error.value = "Selected folder does not support persistent access. Please choose a folder from your device storage."
+                        _error.value =
+                            "Selected folder does not support persistent access. Please choose a folder from your device storage."
                         return@launch
                     } catch (e: Exception) {
                         _error.value = "Failed to obtain folder access: ${e.message}"
                         return@launch
                     }
                 }
+
                 folderPreferences.setOtherFolderUri(uri)
                 _otherFolderUri.value = uri
-                protonDriveService.setCustomOtherFolder(uri)
             } catch (e: Exception) {
                 _error.value = "Failed to set other folder: ${e.message}"
             }
@@ -175,7 +177,6 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 _isProcessing.value = true
                 _error.value = null
 
-                // ✅ OcrProcessor now takes Context (not ContentResolver)
                 val ocrResult = ocrProcessor.processImage(
                     imageUri = imageUri,
                     context = getApplication()
@@ -193,11 +194,9 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                     ocrRawText = ocrResult.rawText,
                     ocrConfidence = ocrResult.confidence,
                     originalUri = imageUri.toString()
-                    // storedUri / renamedFileName / exportFolderUri default to null now ✅
                 )
 
                 repository.insertReceipt(receipt)
-
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error processing receipt"
             } finally {
@@ -210,21 +209,22 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 // Save image with category-based storage if originalUri exists
-                val updatedReceipt = if (receipt.originalUri != null && receipt.storedUri == null) {
-                    val imageUri = Uri.parse(receipt.originalUri)
-                    val (storedPath, fileName) = FileUtils.saveReceiptImage(
-                        context = getApplication(),
-                        sourceUri = imageUri,
-                        receipt = receipt
-                    )
-                    receipt.copy(
-                        storedUri = storedPath,
-                        renamedFileName = fileName
-                    )
-                } else {
-                    receipt
-                }
-                
+                val updatedReceipt =
+                    if (receipt.originalUri != null && receipt.storedUri == null) {
+                        val imageUri = Uri.parse(receipt.originalUri)
+                        val (storedPath, fileName) = FileUtils.saveReceiptImage(
+                            context = getApplication(),
+                            sourceUri = imageUri,
+                            receipt = receipt
+                        )
+                        receipt.copy(
+                            storedUri = storedPath,
+                            renamedFileName = fileName
+                        )
+                    } else {
+                        receipt
+                    }
+
                 repository.updateReceipt(updatedReceipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error updating receipt"
@@ -235,19 +235,15 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     fun deleteReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
-                // Delete associated image files if they exist
                 receipt.storedUri?.let { storedUri ->
                     try {
                         val file = java.io.File(storedUri)
-                        if (file.exists()) {
-                            file.delete()
-                        }
+                        if (file.exists()) file.delete()
                     } catch (e: Exception) {
-                        // Log but don't fail the delete operation
                         e.printStackTrace()
                     }
                 }
-                
+
                 repository.deleteReceipt(receipt)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error deleting receipt"
@@ -286,89 +282,80 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-    
+
     /**
-     * Configures local storage.
-     * 
+     * Kept name/signature so the rest of your app doesn't break.
+     * This now simply toggles LOCAL storage on/off (no Proton).
+     *
      * @param accessToken Unused parameter (kept for backward compatibility)
      * @param enabled Whether local storage is enabled
      */
     fun configureProtonDrive(accessToken: String, enabled: Boolean) {
-        protonDriveService.setConfig(
-            ProtonDriveService.ProtonDriveConfig(
-                accessToken = "",
-                enabled = enabled
-            )
-        )
-        
-        if (enabled) {
-            viewModelScope.launch {
-                try {
-                    protonDriveService.ensureFoldersExist()
-                    _uploadStatus.value = "Local storage configured successfully"
-                } catch (e: Exception) {
-                    _error.value = "Failed to configure local storage: ${e.message}"
-                }
-            }
+        _localStorageEnabled.value = enabled
+        _uploadStatus.value = if (enabled) "Local storage enabled" else "Local storage disabled"
+
+        viewModelScope.launch {
+            delay(2000)
+            _uploadStatus.value = null
         }
     }
-    
+
     /**
-     * Saves a receipt to local storage.
-     * 
-     * @param receipt The receipt to save
+     * Kept name so existing UI buttons keep working.
+     * This now marks a receipt as "exported to local storage".
+     *
+     * If the receipt hasn't been saved locally yet, it will attempt to save it first.
      */
     fun uploadToProtonDrive(receipt: Receipt) {
         viewModelScope.launch {
             try {
                 _isProcessing.value = true
-                _uploadStatus.value = "Saving to local storage..."
-                
-                if (!protonDriveService.isConfigured()) {
-                    _error.value = "Local storage is not enabled. Please enable local storage in settings."
+                _error.value = null
+                _uploadStatus.value = "Saving locally..."
+
+                if (!_localStorageEnabled.value) {
+                    _error.value =
+                        "Local storage is not enabled. Enable it in Settings first."
                     _uploadStatus.value = null
-                    _isProcessing.value = false
                     return@launch
                 }
-                
-                // Use stored URI or original URI
-                val imageUri = receipt.storedUri ?: receipt.originalUri
-                if (imageUri == null) {
+
+                // Ensure we have a local stored file path
+                val ensuredReceipt = if (receipt.storedUri == null && receipt.originalUri != null) {
+                    val imageUri = Uri.parse(receipt.originalUri)
+                    val (storedPath, fileName) = FileUtils.saveReceiptImage(
+                        context = getApplication(),
+                        sourceUri = imageUri,
+                        receipt = receipt
+                    )
+                    val updated = receipt.copy(
+                        storedUri = storedPath,
+                        renamedFileName = fileName
+                    )
+                    repository.updateReceipt(updated)
+                    updated
+                } else {
+                    receipt
+                }
+
+                val localPath = ensuredReceipt.storedUri
+                if (localPath == null) {
                     _error.value = "No image found for this receipt"
                     _uploadStatus.value = null
-                    _isProcessing.value = false
                     return@launch
                 }
-                
-                val result = protonDriveService.uploadReceipt(receipt, imageUri)
-                
-                if (result.isSuccess) {
-                    val localPath = result.getOrNull()
-                    _uploadStatus.value = "Successfully saved to local storage"
-                    
-                    // Update receipt with local storage path and export status
-                    val updatedReceipt = receipt.copy(
-                        exportFolderUri = localPath,
-                        exportStatus = ExportStatus.EXPORTED,
-                        lastExportAttemptAt = System.currentTimeMillis()
-                    )
-                    repository.updateReceipt(updatedReceipt)
-                    
-                    // Clear status after a delay
-                    kotlinx.coroutines.delay(3000)
-                    _uploadStatus.value = null
-                } else {
-                    val error = result.exceptionOrNull()
-                    _error.value = "Save failed: ${error?.message}"
-                    _uploadStatus.value = null
-                    
-                    // Update receipt with failed status
-                    val updatedReceipt = receipt.copy(
-                        exportStatus = ExportStatus.FAILED,
-                        lastExportAttemptAt = System.currentTimeMillis()
-                    )
-                    repository.updateReceipt(updatedReceipt)
-                }
+
+                // Mark as exported (local)
+                val updatedReceipt = ensuredReceipt.copy(
+                    exportFolderUri = localPath,
+                    exportStatus = ExportStatus.EXPORTED,
+                    lastExportAttemptAt = System.currentTimeMillis()
+                )
+                repository.updateReceipt(updatedReceipt)
+
+                _uploadStatus.value = "Saved to local storage"
+                delay(2500)
+                _uploadStatus.value = null
             } catch (e: Exception) {
                 _error.value = e.message ?: "Error saving to local storage"
                 _uploadStatus.value = null
@@ -377,7 +364,7 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-    
+
     fun clearUploadStatus() {
         _uploadStatus.value = null
     }
