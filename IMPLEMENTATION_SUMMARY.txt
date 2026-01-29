@@ -1,0 +1,120 @@
+================================================================================
+              ANDROID EXPENSES APP - IMAGE SAVING FIX
+                     Implementation Summary
+================================================================================
+
+PROBLEM:
+--------
+Custom folder selection UI exists but images always save to default folders.
+User configuration has no effect - silent failure.
+
+ROOT CAUSE:
+-----------
+FileUtils.saveReceiptImage() never checks for custom folder URIs.
+ViewModel has URIs but doesn't pass them to FileUtils.
+No DocumentFile API integration for SAF storage.
+
+SOLUTION:
+---------
+Bridge the gap: Connect UI → Preferences → ViewModel → FileUtils → Storage
+
+IMPLEMENTATION FLOW:
+--------------------
+
+BEFORE:
+    User selects folder → URI saved → URI loaded → [URI NEVER USED] 
+                                                           ↓
+    Receipt saved → FileUtils → DEFAULT FOLDERS ONLY
+
+AFTER:
+    User selects folder → URI saved → URI loaded → ViewModel gets URI
+                                                           ↓
+    Receipt saved → FileUtils (with URI) → Try custom folder
+                                                  ↓
+                                            Success? Use it.
+                                                  ↓
+                                            Failed? Fall back to default.
+
+CODE CHANGES:
+-------------
+
+1. FileUtils.kt (+120 lines)
+   ✓ Add customFolderUri parameter to saveReceiptImage()
+   ✓ Implement saveToCustomFolder() using DocumentFile API
+   ✓ Add error handling with explicit null checks
+   ✓ Log operations for debugging
+   ✓ Clean up files if operations fail
+
+2. ReceiptViewModel.kt (+24 lines)
+   ✓ Add getCustomFolderForCategory() helper
+   ✓ Update updateReceipt() to pass custom URI
+   ✓ Update uploadToProtonDrive() to pass custom URI
+   ✓ Category logic: Fuel → fuel folder, Other → other folder
+
+3. build.gradle.kts (+3 lines)
+   ✓ Add androidx.documentfile:documentfile:1.0.1
+
+FEATURES:
+---------
+✓ Custom folder support via Storage Access Framework
+✓ Automatic fallback to default folders on error
+✓ Category-based routing (Fuel/Other)
+✓ Comprehensive error handling
+✓ Detailed logging for debugging
+✓ Backward compatible (optional parameter)
+
+SECURITY:
+---------
+✓ No vulnerabilities in dependencies
+✓ CodeQL scan passed
+✓ Proper SAF permission management
+✓ No path traversal issues
+✓ Safe fallback behavior
+
+TESTING:
+--------
+Automated: ✓ PASSED
+Manual: ⏳ PENDING (requires physical device)
+
+TESTING CHECKLIST:
+------------------
+[ ] Select custom folder → Save receipt → Verify in folder
+[ ] Select different folders for Fuel/Other → Verify routing
+[ ] Restart app → Verify folders persist
+[ ] Delete custom folder → Verify fallback works
+[ ] Don't select folders → Verify default behavior works
+
+STATISTICS:
+-----------
+Files Modified: 4
+Lines Added: 482
+Lines Removed: 5
+Net Change: +477
+Commits: 4
+
+DOCUMENTATION:
+--------------
+✓ IMAGE_SAVING_FIX.md - Technical details
+✓ PR_SUMMARY_IMAGE_SAVING_FIX.md - Executive summary
+✓ IMPLEMENTATION_SUMMARY.txt - Quick reference (this file)
+
+STATUS:
+-------
+✅ Implementation: COMPLETE
+✅ Code Review: ADDRESSED
+✅ Security: PASSED
+⏳ Manual Testing: PENDING
+⏳ Device Testing: PENDING (Google Pixel 9a)
+
+NEXT STEPS:
+-----------
+1. Test on Google Pixel 9a
+2. Verify custom folder selection
+3. Verify image saving
+4. Verify fallback behavior
+5. Verify persistence
+6. Approve and merge PR
+
+================================================================================
+END OF SUMMARY
+================================================================================

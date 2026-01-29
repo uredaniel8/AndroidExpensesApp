@@ -205,6 +205,20 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Determines the appropriate custom folder URI based on the receipt category.
+     * 
+     * @param category Receipt category (e.g., "Fuel", "Other")
+     * @return Custom folder URI for fuel if category is "Fuel", otherwise returns other folder URI
+     */
+    private fun getCustomFolderForCategory(category: String): Uri? {
+        return if (category.equals("Fuel", ignoreCase = true)) {
+            _fuelFolderUri.value
+        } else {
+            _otherFolderUri.value
+        }
+    }
+
     fun updateReceipt(receipt: Receipt) {
         viewModelScope.launch {
             try {
@@ -212,10 +226,13 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 val updatedReceipt =
                     if (receipt.originalUri != null && receipt.storedUri == null) {
                         val imageUri = Uri.parse(receipt.originalUri)
+                        val customFolderUri = getCustomFolderForCategory(receipt.category)
+                        
                         val (storedPath, fileName) = FileUtils.saveReceiptImage(
                             context = getApplication(),
                             sourceUri = imageUri,
-                            receipt = receipt
+                            receipt = receipt,
+                            customFolderUri = customFolderUri
                         )
                         receipt.copy(
                             storedUri = storedPath,
@@ -323,10 +340,13 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 // Ensure we have a local stored file path
                 val ensuredReceipt = if (receipt.storedUri == null && receipt.originalUri != null) {
                     val imageUri = Uri.parse(receipt.originalUri)
+                    val customFolderUri = getCustomFolderForCategory(receipt.category)
+                    
                     val (storedPath, fileName) = FileUtils.saveReceiptImage(
                         context = getApplication(),
                         sourceUri = imageUri,
-                        receipt = receipt
+                        receipt = receipt,
+                        customFolderUri = customFolderUri
                     )
                     val updated = receipt.copy(
                         storedUri = storedPath,
