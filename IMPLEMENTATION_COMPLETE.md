@@ -81,8 +81,8 @@ The OneDrive integration has been successfully replaced with ProtonDrive integra
 ## Functionality Preserved
 
 ✅ **Category-based Folder Organization**  
-   - Fuel receipts → `Receipts/Fuel`
-   - Other receipts → `Receipts/Other`
+   - Fuel receipts → `Documents/Fuel Receipts`
+   - Other receipts → `Documents/Expenses Receipts`
 
 ✅ **Upload Features**  
    - Manual upload from edit screen

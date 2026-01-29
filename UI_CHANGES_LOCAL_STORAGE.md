@@ -109,8 +109,8 @@ This document describes the user interface changes made when transitioning from 
 ║ Receipts/                              ║
 ║                                        ║
 ║ Files are organized by category:       ║
-║ • Fuel receipts → Receipts/Fuel        ║
-║ • Other receipts → Receipts/Other      ║
+║ • Fuel receipts → Documents/Fuel Receipts        ║
+║ • Other receipts → Documents/Expenses Receipts      ║
 ║                                        ║
 ║ These files are stored in your         ║
 ║ device's external storage and are      ║

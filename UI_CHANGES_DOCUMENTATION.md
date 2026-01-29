@@ -289,7 +289,7 @@ All new UI elements include proper contentDescription attributes:
 - [ ] Remove dialog: Selected category is removed from list
 
 ### File System
-- [ ] Fuel receipts saved in Receipts/Fuel/ folder
-- [ ] Other receipts saved in Receipts/Other/ folder
+- [ ] Fuel receipts saved in Documents/Fuel Receipts/ folder
+- [ ] Other receipts saved in Documents/Expenses Receipts/ folder
 - [ ] Filenames follow DD.MM.YYYY - Description - Amount format
 - [ ] Folders are created automatically if they don't exist

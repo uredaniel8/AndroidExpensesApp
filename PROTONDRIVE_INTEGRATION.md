@@ -7,8 +7,8 @@ The Android Expenses App now supports automatic receipt uploads to ProtonDrive w
 ## Features
 
 ### Automatic Folder Organization
-- **Fuel Receipts**: Uploaded to `Receipts/Fuel/` folder
-- **Other Receipts**: Uploaded to `Receipts/Other/` folder
+- **Fuel Receipts**: Uploaded to `Documents/Fuel Receipts/` folder
+- **Other Receipts**: Uploaded to `Documents/Expenses Receipts/` folder
 
 ### Upload Process
 1. Capture or import a receipt

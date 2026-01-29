@@ -26,10 +26,10 @@ Users can optionally select custom folders for each category type:
 fun getCategoryFolder(context: Context, category: String): File {
     val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
     val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
-        Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
+        Log.d("FileUtils", "Category '$category' matched as Fuel - using Documents/Fuel Receipts folder")
         File(baseFolder, "Fuel")
     } else {
-        Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
+        Log.d("FileUtils", "Category '$category' matched as Other - using Documents/Expenses Receipts folder")
         File(baseFolder, "Other")
     }
     if (!categoryFolder.exists()) {
@@ -122,8 +122,8 @@ The implementation includes comprehensive debug logging to track folder routing:
 
 ### FileUtils Logs
 - `"Starting saveReceiptImage for category: {category}"`
-- `"Category '{category}' matched as Fuel - using Receipts/Fuel folder"`
-- `"Category '{category}' matched as Other - using Receipts/Other folder"`
+- `"Category '{category}' matched as Fuel - using Documents/Fuel Receipts folder"`
+- `"Category '{category}' matched as Other - using Documents/Expenses Receipts folder"`
 - `"Using default category folder: {path}"`
 - `"Successfully saved {bytes} bytes to: {path}"`
 

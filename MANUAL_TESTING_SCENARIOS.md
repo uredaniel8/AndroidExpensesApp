@@ -16,8 +16,8 @@
 5. Save the receipt
 
 **Expected Results:**
-- Log shows: `"Category 'Fuel' matched as Fuel - using Receipts/Fuel folder"`
-- Receipt saved to: `/Android/data/com.expenses.app/files/Receipts/Fuel/`
+- Log shows: `"Category 'Fuel' matched as Fuel - using Documents/Fuel Receipts folder"`
+- Receipt saved to: `/Android/data/com.expenses.app/files/Documents/Fuel Receipts/`
 - File name format: `DD.MM.YYYY - Description - Amount.jpg`
 
 **Verification:**
@@ -33,8 +33,8 @@
 5. Save the receipt
 
 **Expected Results:**
-- Log shows: `"Category 'Food' matched as Other - using Receipts/Other folder"`
-- Receipt saved to: `/Android/data/com.expenses.app/files/Receipts/Other/`
+- Log shows: `"Category 'Food' matched as Other - using Documents/Expenses Receipts folder"`
+- Receipt saved to: `/Android/data/com.expenses.app/files/Documents/Expenses Receipts/`
 
 **Verification:**
 - Check device file system
@@ -46,7 +46,7 @@
 2. Save each receipt
 
 **Expected Results:**
-- All three receipts saved to `Receipts/Fuel/` folder
+- All three receipts saved to `Documents/Fuel Receipts/` folder
 - Logs confirm Fuel category matching for all variations
 
 ### Test 1.4: Various Other Categories
@@ -55,7 +55,7 @@
 2. Save each receipt
 
 **Expected Results:**
-- All receipts saved to `Receipts/Other/` folder
+- All receipts saved to `Documents/Expenses Receipts/` folder
 - Each receipt in the same Other folder regardless of specific category name
 
 ## Test Scenario 2: Custom Folder Routing
@@ -88,7 +88,7 @@
 **Verification:**
 - Navigate to custom folder on device
 - Verify receipt file exists there
-- Verify NOT in default `/Receipts/Fuel/` folder
+- Verify NOT in default `/Documents/Fuel Receipts/` folder
 
 ### Test 2.3: Set Custom Other Folder
 **Steps:**
@@ -109,7 +109,7 @@
 
 **Expected Results:**
 - Receipt saved to custom Other folder
-- NOT in default `/Receipts/Other/` folder
+- NOT in default `/Documents/Expenses Receipts/` folder
 
 ### Test 2.5: Different Categories Use Correct Custom Folders
 **Steps:**
@@ -135,7 +135,7 @@
 - First receipt saves to custom folder
 - Second receipt:
   - Log shows: `"Failed to save to custom folder, falling back to default"`
-  - Saves to default `/Receipts/Fuel/` folder
+  - Saves to default `/Documents/Fuel Receipts/` folder
   - No app crash
 
 ### Test 3.2: Custom Folder Permission Revoked
@@ -159,7 +159,7 @@
 
 **Expected Results:**
 - First receipt in custom folder
-- After reset, second receipt in default `/Receipts/Fuel/` folder
+- After reset, second receipt in default `/Documents/Fuel Receipts/` folder
 - Permissions properly released
 
 ## Test Scenario 4: Edge Cases
@@ -171,7 +171,7 @@
 3. Save receipt
 
 **Expected Results:**
-- Receipt saved to `Receipts/Other/` folder
+- Receipt saved to `Documents/Expenses Receipts/` folder
 - No crash
 
 ### Test 4.2: Uncategorized Receipts
@@ -181,7 +181,7 @@
 3. Save receipt
 
 **Expected Results:**
-- Receipt saved to `Receipts/Other/` folder
+- Receipt saved to `Documents/Expenses Receipts/` folder
 
 ### Test 4.3: Special Characters in Category
 **Steps:**
@@ -189,7 +189,7 @@
 2. Save receipts with these categories
 
 **Expected Results:**
-- All saved to `Receipts/Other/` folder
+- All saved to `Documents/Expenses Receipts/` folder
 - File names properly sanitized
 
 ### Test 4.4: Very Long Category Name
@@ -255,10 +255,10 @@ Use ADB to verify file locations:
 
 ```bash
 # List Fuel receipts in default folder
-adb shell ls -la /sdcard/Android/data/com.expenses.app/files/Receipts/Fuel/
+adb shell ls -la /sdcard/Android/data/com.expenses.app/files/Documents/Fuel Receipts/
 
 # List Other receipts in default folder
-adb shell ls -la /sdcard/Android/data/com.expenses.app/files/Receipts/Other/
+adb shell ls -la /sdcard/Android/data/com.expenses.app/files/Documents/Expenses Receipts/
 
 # Pull logs to check folder routing
 adb logcat | grep FileUtils
@@ -272,9 +272,9 @@ adb logcat | grep ReceiptViewModel
 D/ReceiptViewModel: Category 'Fuel' matched as Fuel - checking for custom Fuel folder
 D/ReceiptViewModel: No custom folder set for category 'Fuel', will use default
 D/FileUtils: Starting saveReceiptImage for category: Fuel
-D/FileUtils: Category 'Fuel' matched as Fuel - using Receipts/Fuel folder
-D/FileUtils: Using default category folder: /storage/.../Receipts/Fuel
-I/FileUtils: Successfully saved 123456 bytes to: /storage/.../Receipts/Fuel/01.01.2024 - Test - 45.67.jpg
+D/FileUtils: Category 'Fuel' matched as Fuel - using Documents/Fuel Receipts folder
+D/FileUtils: Using default category folder: /storage/.../Documents/Fuel Receipts
+I/FileUtils: Successfully saved 123456 bytes to: /storage/.../Documents/Fuel Receipts/01.01.2024 - Test - 45.67.jpg
 ```
 
 **Other Receipt to Custom Folder:**

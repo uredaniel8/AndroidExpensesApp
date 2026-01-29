@@ -1,7 +1,7 @@
 # Changes Summary: Local Storage Implementation
 
 ## Overview
-This PR changes the Android Expenses App from syncing data to ProtonDrive to saving data locally on the device. All receipt images are now stored in the app's external files directory with the same folder structure (Receipts/Fuel and Receipts/Other).
+This PR changes the Android Expenses App from syncing data to ProtonDrive to saving data locally on the device. All receipt images are now stored in the app's external files directory with the same folder structure (Documents/Fuel Receipts and Documents/Expenses Receipts).
 
 ## Files Changed
 

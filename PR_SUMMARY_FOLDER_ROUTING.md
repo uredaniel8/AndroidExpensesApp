@@ -5,8 +5,8 @@ This PR enhances the existing category-based receipt folder routing implementati
 
 ## Problem Statement
 The Android Expenses App needed to properly save receipts in separate directories based on their categories:
-- Fuel receipts → `Receipts/Fuel/`
-- Other receipts → `Receipts/Other/`
+- Fuel receipts → `Documents/Fuel Receipts/`
+- Other receipts → `Documents/Expenses Receipts/`
 - Custom folder selections should take precedence over defaults
 
 ## Solution
@@ -25,7 +25,7 @@ This PR addresses all three gaps.
 Added comprehensive debug logging at every decision point:
 ```kotlin
 // Category detection
-Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
+Log.d("FileUtils", "Category '$category' matched as Fuel - using Documents/Fuel Receipts folder")
 
 // Custom folder selection
 Log.d("ReceiptViewModel", "Custom folder found for category '$category': $folderUri")
@@ -115,9 +115,9 @@ See `MANUAL_TESTING_SCENARIOS.md` for detailed testing procedures
 D/ReceiptViewModel: Category 'Fuel' matched as Fuel - checking for custom Fuel folder
 D/ReceiptViewModel: No custom folder set for category 'Fuel', will use default
 D/FileUtils: Starting saveReceiptImage for category: Fuel
-D/FileUtils: Category 'Fuel' matched as Fuel - using Receipts/Fuel folder
-D/FileUtils: Using default category folder: /storage/.../Receipts/Fuel
-I/FileUtils: Successfully saved 123456 bytes to: /storage/.../Receipts/Fuel/01.01.2024 - Test - 45.67.jpg
+D/FileUtils: Category 'Fuel' matched as Fuel - using Documents/Fuel Receipts folder
+D/FileUtils: Using default category folder: /storage/.../Documents/Fuel Receipts
+I/FileUtils: Successfully saved 123456 bytes to: /storage/.../Documents/Fuel Receipts/01.01.2024 - Test - 45.67.jpg
 ```
 
 ## Backward Compatibility

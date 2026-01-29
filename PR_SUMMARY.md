@@ -44,8 +44,8 @@ Fix critical camera crash, implement receipt deletion feature, and add ProtonDri
 **Problem**: Need to upload receipts to ProtonDrive with category-based organization.
 
 **Requirements**:
-- Fuel receipts → `Receipts/Fuel/` folder
-- Other receipts → `Receipts/Other/` folder
+- Fuel receipts → `Documents/Fuel Receipts/` folder
+- Other receipts → `Documents/Expenses Receipts/` folder
 - Manual upload capability
 
 **Solution**: 
