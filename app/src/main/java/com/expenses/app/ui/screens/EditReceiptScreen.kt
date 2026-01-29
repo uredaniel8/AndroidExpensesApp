@@ -113,7 +113,7 @@ fun EditReceiptScreen(
             )
 
             // Date Picker
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
             OutlinedTextField(
                 value = dateFormat.format(Date(receiptDate)),
                 onValueChange = {},
