@@ -183,10 +183,10 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
                 )
 
                 val receipt = Receipt(
-                    receiptDate = ocrResult.date ?: System.currentTimeMillis(),
-                    merchant = ocrResult.merchant,
-                    totalAmount = ocrResult.totalAmount ?: 0.0,
-                    vatAmount = ocrResult.vatAmount,
+                    receiptDate = System.currentTimeMillis(),
+                    merchant = null,
+                    totalAmount = 0.0,
+                    vatAmount = null,
                     currency = ocrResult.currency ?: CurrencyUtils.getDefaultCurrency(),
                     category = "Uncategorized",
                     notes = null,

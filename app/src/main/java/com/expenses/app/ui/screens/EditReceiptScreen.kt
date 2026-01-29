@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Upload
@@ -38,11 +39,13 @@ fun EditReceiptScreen(
     var category by remember { mutableStateOf(receipt?.category ?: "Uncategorized") }
     var notes by remember { mutableStateOf(receipt?.notes ?: "") }
     var description by remember { mutableStateOf(receipt?.description ?: "") }
+    var receiptDate by remember { mutableStateOf(receipt?.receiptDate ?: System.currentTimeMillis()) }
     
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var showDeleteCategoryDialog by remember { mutableStateOf(false) }
     var categoryToDelete by remember { mutableStateOf<String?>(null) }
     var showDeleteReceiptDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -64,6 +67,7 @@ fun EditReceiptScreen(
                         onClick = {
                             receipt?.let {
                                 val updatedReceipt = it.copy(
+                                    receiptDate = receiptDate,
                                     merchant = merchant.takeIf { it.isNotBlank() },
                                     totalAmount = totalAmount.toDoubleOrNull() ?: 0.0,
                                     vatAmount = vatAmount.toDoubleOrNull(),
@@ -108,14 +112,20 @@ fun EditReceiptScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Date (display only for now)
-            receipt?.let {
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                Text(
-                    text = "Date: ${dateFormat.format(Date(it.receiptDate))}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+            // Date Picker
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            OutlinedTextField(
+                value = dateFormat.format(Date(receiptDate)),
+                onValueChange = {},
+                label = { Text("Receipt Date") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             // Total Amount
             OutlinedTextField(
@@ -352,5 +362,34 @@ fun EditReceiptScreen(
                 }
             }
         )
+    }
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = receiptDate
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { selectedDate ->
+                            receiptDate = selectedDate
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 }
