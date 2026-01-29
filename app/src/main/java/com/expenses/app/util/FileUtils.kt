@@ -82,10 +82,19 @@ object FileUtils {
     /**
      * Saves a receipt image to either a custom folder (if provided) or the default app folder.
      * 
+     * When a custom folder is provided, the image is saved using the Storage Access Framework (DocumentFile API).
+     * The returned URI will be a content:// URI in this case.
+     * 
+     * When the default folder is used (or as fallback), the image is saved to app's external files directory.
+     * The returned URI will be a file path string in this case.
+     * 
+     * Note: The stored URI format differs based on storage method (content:// vs file path).
+     * This is by design to support both SAF and traditional file storage.
+     * 
      * @param context Application context
      * @param sourceUri URI of the source image to save
      * @param receipt Receipt object containing metadata for file naming
-     * @param customFolderUri Optional custom folder URI selected by user (from DocumentTree)
+     * @param customFolderUri Optional custom folder URI selected by user (from ACTION_OPEN_DOCUMENT_TREE)
      * @return Pair of (file path/URI string, file name) or (null, null) on error
      */
     fun saveReceiptImage(
@@ -119,9 +128,18 @@ object FileUtils {
             val categoryFolder = getCategoryFolder(context, receipt.category)
             val destFile = File(categoryFolder, fileName)
             
-            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            val inputStream = context.contentResolver.openInputStream(sourceUri)
+            if (inputStream == null) {
+                android.util.Log.e("FileUtils", "Failed to open input stream for source URI")
+                return Pair(null, null)
+            }
+            
+            inputStream.use { input ->
                 destFile.outputStream().use { output ->
-                    input.copyTo(output)
+                    val bytesCopied = input.copyTo(output)
+                    if (bytesCopied == 0L) {
+                        android.util.Log.w("FileUtils", "No bytes copied from source")
+                    }
                 }
             }
             
@@ -160,7 +178,10 @@ object FileUtils {
             
             // Check if file already exists and delete it
             val existingFile = folderDoc.findFile(fileName)
-            existingFile?.delete()
+            if (existingFile != null && !existingFile.delete()) {
+                android.util.Log.w("FileUtils", "Failed to delete existing file: $fileName")
+                // Continue anyway - createFile will handle collision by appending number
+            }
             
             // Create new file in the custom folder
             val newFile = folderDoc.createFile(mimeType, fileName)
@@ -170,9 +191,26 @@ object FileUtils {
             }
             
             // Copy file content
-            context.contentResolver.openInputStream(sourceUri)?.use { input ->
-                context.contentResolver.openOutputStream(newFile.uri)?.use { output ->
-                    input.copyTo(output)
+            val inputStream = context.contentResolver.openInputStream(sourceUri)
+            if (inputStream == null) {
+                android.util.Log.e("FileUtils", "Failed to open input stream for source")
+                newFile.delete()  // Clean up the created file
+                return null
+            }
+            
+            inputStream.use { input ->
+                val outputStream = context.contentResolver.openOutputStream(newFile.uri)
+                if (outputStream == null) {
+                    android.util.Log.e("FileUtils", "Failed to open output stream for destination")
+                    newFile.delete()  // Clean up the created file
+                    return null
+                }
+                
+                outputStream.use { output ->
+                    val bytesCopied = input.copyTo(output)
+                    if (bytesCopied == 0L) {
+                        android.util.Log.w("FileUtils", "No bytes copied to custom folder")
+                    }
                 }
             }
             
