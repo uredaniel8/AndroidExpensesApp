@@ -25,7 +25,6 @@ fun SettingsScreen(
     fuelFolderUri: Uri? = null,
     otherFolderUri: Uri? = null
 ) {
-    var isEnabled by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
     var showFolderInfo by remember { mutableStateOf(false) }
 
@@ -75,18 +74,18 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Configure local storage to automatically save receipts:",
+                        text = "Receipts are automatically saved to local storage by category:",
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Text(
-                        text = "• Fuel receipts → Receipts/Fuel folder",
+                        text = "• Fuel receipts → Documents/Fuel Receipts folder",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Text(
-                        text = "• Other receipts → Receipts/Other folder",
+                        text = "• Other receipts → Documents/Expenses Receipts folder",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -246,29 +245,10 @@ fun SettingsScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Enable Local Storage")
-                Switch(
-                    checked = isEnabled,
-                    onCheckedChange = { isEnabled = it }
-                )
-            }
-
             TextButton(
                 onClick = { showInfo = true }
             ) {
                 Text("Where are files saved?")
-            }
-
-            Button(
-                onClick = { onConfigureProtonDrive("", isEnabled) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Save Configuration")
             }
         }
     }
@@ -281,11 +261,11 @@ fun SettingsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Receipt images are saved to:")
                     Text("")
-                    Text("Android/data/com.expenses.app/files/Receipts/")
+                    Text("Android/data/com.expenses.app/files/Documents/")
                     Text("")
                     Text("Files are organized by category:")
-                    Text("• Fuel receipts → Receipts/Fuel")
-                    Text("• Other receipts → Receipts/Other")
+                    Text("• Fuel receipts → Documents/Fuel Receipts")
+                    Text("• Other receipts → Documents/Expenses Receipts")
                     Text("")
                     Text(
                         "These files are stored in your device's external storage and are accessible only to this app.",

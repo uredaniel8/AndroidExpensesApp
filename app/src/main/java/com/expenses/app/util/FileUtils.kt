@@ -68,13 +68,13 @@ object FileUtils {
     }
 
     fun getCategoryFolder(context: Context, category: String): File {
-        val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
+        val baseFolder = File(context.getExternalFilesDir(null), "Documents")
         val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
-            Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
-            File(baseFolder, "Fuel")
+            Log.d("FileUtils", "Category '$category' matched as Fuel - using Documents/Fuel Receipts folder")
+            File(baseFolder, "Fuel Receipts")
         } else {
-            Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
-            File(baseFolder, "Other")
+            Log.d("FileUtils", "Category '$category' matched as Other - using Documents/Expenses Receipts folder")
+            File(baseFolder, "Expenses Receipts")
         }
         if (!categoryFolder.exists()) {
             val created = categoryFolder.mkdirs()

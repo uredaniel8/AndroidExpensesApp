@@ -31,8 +31,8 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
     private val ocrProcessor = OcrProcessor()
     private val folderPreferences = FolderPreferences(application)
 
-    // Local-storage enabled flag (since Proton is removed)
-    private val _localStorageEnabled = MutableStateFlow(false)
+    // Local-storage enabled flag (since Proton is removed) - always enabled
+    private val _localStorageEnabled = MutableStateFlow(true)
     val localStorageEnabled: StateFlow<Boolean> = _localStorageEnabled.asStateFlow()
 
     val receipts: StateFlow<List<Receipt>> = repository.getAllReceipts()
