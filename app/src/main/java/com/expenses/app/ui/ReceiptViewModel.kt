@@ -2,6 +2,7 @@ package com.expenses.app.ui
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.expenses.app.data.Category
@@ -212,11 +213,21 @@ class ReceiptViewModel(application: Application) : AndroidViewModel(application)
      * @return Custom folder URI for fuel if category is "Fuel", otherwise returns other folder URI
      */
     private fun getCustomFolderForCategory(category: String): Uri? {
-        return if (category.equals("Fuel", ignoreCase = true)) {
+        val folderUri = if (category.equals("Fuel", ignoreCase = true)) {
+            Log.d("ReceiptViewModel", "Category '$category' matched as Fuel - checking for custom Fuel folder")
             _fuelFolderUri.value
         } else {
+            Log.d("ReceiptViewModel", "Category '$category' is not Fuel - checking for custom Other folder")
             _otherFolderUri.value
         }
+        
+        if (folderUri != null) {
+            Log.d("ReceiptViewModel", "Custom folder found for category '$category': $folderUri")
+        } else {
+            Log.d("ReceiptViewModel", "No custom folder set for category '$category', will use default")
+        }
+        
+        return folderUri
     }
 
     fun updateReceipt(receipt: Receipt) {

@@ -116,6 +116,13 @@ dependencies {
     // OkHttp for HTTP requests (used by ProtonDrive)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-inline:5.7.0")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    
     // Debugging
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
