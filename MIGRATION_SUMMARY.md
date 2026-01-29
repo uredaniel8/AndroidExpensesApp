@@ -76,7 +76,7 @@ This document summarizes the complete migration from OneDrive integration to Pro
 ## Features Maintained
 
 ✅ **All Original Features Preserved:**
-- Category-based folder organization (Fuel → Receipts/Fuel, Other → Receipts/Other)
+- Category-based folder organization (Fuel → Documents/Fuel Receipts, Other → Documents/Expenses Receipts)
 - Case-insensitive category matching
 - Manual upload from edit screen
 - Token-based authentication
@@ -93,9 +93,9 @@ This document summarizes the complete migration from OneDrive integration to Pro
 ### Manual Testing Checklist
 - [ ] Configure ProtonDrive with valid token
 - [ ] Upload receipt with Fuel category
-- [ ] Verify upload to Receipts/Fuel folder
+- [ ] Verify upload to Documents/Fuel Receipts folder
 - [ ] Upload receipt with Other category
-- [ ] Verify upload to Receipts/Other folder
+- [ ] Verify upload to Documents/Expenses Receipts folder
 - [ ] Test error handling with invalid token
 - [ ] Test error handling without configuration
 - [ ] Verify status updates (EXPORTED/FAILED)

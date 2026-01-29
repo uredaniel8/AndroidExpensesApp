@@ -103,8 +103,8 @@ This document details all the changes made to implement the 7 enhancement requir
 **Implementation Details:**
 - When a receipt is saved/updated, the image is copied from temporary location to permanent storage
 - Images are organized into two folders:
-  - `Receipts/Fuel/` - For receipts with category "Fuel" (case-insensitive)
-  - `Receipts/Other/` - For all other categories
+  - `Documents/Fuel Receipts/` - For receipts with category "Fuel" (case-insensitive)
+  - `Documents/Expenses Receipts/` - For all other categories
 - Folders are automatically created if they don't exist
 
 ---

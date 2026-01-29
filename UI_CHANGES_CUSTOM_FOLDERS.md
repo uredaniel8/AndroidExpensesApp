@@ -17,8 +17,8 @@ The Settings screen now includes a new section below the "Local Storage" section
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Configure local storage to automatically save  │ │
 │ │ receipts:                                       │ │
-│ │ • Fuel receipts → Receipts/Fuel folder         │ │
-│ │ • Other receipts → Receipts/Other folder       │ │
+│ │ • Fuel receipts → Documents/Fuel Receipts folder         │ │
+│ │ • Other receipts → Documents/Expenses Receipts folder       │ │
 │ │ Files are stored in the app's external         │ │
 │ │ storage directory.                              │ │
 │ └─────────────────────────────────────────────────┘ │

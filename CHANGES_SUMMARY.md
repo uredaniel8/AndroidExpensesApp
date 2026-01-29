@@ -217,8 +217,8 @@ Added INTERNET permission:
 1. User opens receipt in edit screen
 2. Taps "Upload to ProtonDrive" button
 3. App determines folder based on category:
-   - "Fuel" → `Receipts/Fuel/`
-   - Other → `Receipts/Other/`
+   - "Fuel" → `Documents/Fuel Receipts/`
+   - Other → `Documents/Expenses Receipts/`
 4. File uploaded with formatted name
 5. Receipt marked as EXPORTED
 6. Success/failure message shown
@@ -285,12 +285,12 @@ app/src/main/java/com/expenses/app/
 2. **Upload - Fuel Category**
    - Create receipt with "Fuel" category
    - Upload to ProtonDrive
-   - Verify in `Receipts/Fuel/` folder
+   - Verify in `Documents/Fuel Receipts/` folder
 
 3. **Upload - Other Categories**
    - Create receipts with various categories
    - Upload to ProtonDrive
-   - Verify in `Receipts/Other/` folder
+   - Verify in `Documents/Expenses Receipts/` folder
 
 4. **Error Handling**
    - Upload without configuration

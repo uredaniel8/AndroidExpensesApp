@@ -15,8 +15,8 @@ import java.io.File
  * Unit tests for FileUtils to validate category-based folder routing.
  * 
  * These tests verify that:
- * 1. Fuel receipts are routed to the "Receipts/Fuel" folder
- * 2. Non-fuel receipts are routed to the "Receipts/Other" folder
+ * 1. Fuel receipts are routed to the "Documents/Fuel Receipts" folder
+ * 2. Non-fuel receipts are routed to the "Documents/Expenses Receipts" folder
  * 3. Category matching is case-insensitive
  * 4. Various category names are correctly routed
  */
@@ -43,8 +43,8 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Fuel'", folder.path.endsWith("Fuel"))
-        assertTrue("Folder path should contain 'Receipts'", folder.path.contains("Receipts"))
+        assertTrue("Folder path should end with 'Fuel Receipts'", folder.path.endsWith("Fuel Receipts"))
+        assertTrue("Folder path should contain 'Documents'", folder.path.contains("Documents"))
     }
 
     @Test
@@ -56,7 +56,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Fuel'", folder.path.endsWith("Fuel"))
+        assertTrue("Folder path should end with 'Fuel Receipts'", folder.path.endsWith("Fuel Receipts"))
     }
 
     @Test
@@ -68,7 +68,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Fuel'", folder.path.endsWith("Fuel"))
+        assertTrue("Folder path should end with 'Fuel Receipts'", folder.path.endsWith("Fuel Receipts"))
     }
 
     @Test
@@ -80,7 +80,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Fuel'", folder.path.endsWith("Fuel"))
+        assertTrue("Folder path should end with 'Fuel Receipts'", folder.path.endsWith("Fuel Receipts"))
     }
 
     @Test
@@ -92,8 +92,8 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
-        assertTrue("Folder path should contain 'Receipts'", folder.path.contains("Receipts"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
+        assertTrue("Folder path should contain 'Documents'", folder.path.contains("Documents"))
     }
 
     @Test
@@ -105,7 +105,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
     }
 
     @Test
@@ -117,7 +117,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
     }
 
     @Test
@@ -129,7 +129,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
     }
 
     @Test
@@ -141,7 +141,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
     }
 
     @Test
@@ -153,7 +153,7 @@ class FileUtilsTest {
         val folder = FileUtils.getCategoryFolder(mockContext, category)
         
         // Assert
-        assertTrue("Folder path should end with 'Other'", folder.path.endsWith("Other"))
+        assertTrue("Folder path should end with 'Expenses Receipts'", folder.path.endsWith("Expenses Receipts"))
     }
 
     @Test
@@ -163,13 +163,13 @@ class FileUtilsTest {
         val otherFolder = FileUtils.getCategoryFolder(mockContext, "Food")
         
         // Assert
-        // Both folders should be under the same parent Receipts directory
+        // Both folders should be under the same parent Documents directory
         assertEquals("Both folders should have same parent", 
             fuelFolder.parent, otherFolder.parent)
         
-        // Parent directory should be named "Receipts"
-        assertTrue("Parent should be 'Receipts'", 
-            fuelFolder.parentFile?.name == "Receipts")
+        // Parent directory should be named "Documents"
+        assertTrue("Parent should be 'Documents'", 
+            fuelFolder.parentFile?.name == "Documents")
     }
 
     @Test
