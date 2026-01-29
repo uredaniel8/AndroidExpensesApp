@@ -26,12 +26,15 @@ Users can optionally select custom folders for each category type:
 fun getCategoryFolder(context: Context, category: String): File {
     val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
     val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
+        Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
         File(baseFolder, "Fuel")
     } else {
+        Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
         File(baseFolder, "Other")
     }
     if (!categoryFolder.exists()) {
-        categoryFolder.mkdirs()
+        val created = categoryFolder.mkdirs()
+        Log.d("FileUtils", "Created folder ${categoryFolder.absolutePath}: $created")
     }
     return categoryFolder
 }
@@ -48,10 +51,19 @@ fun getCategoryFolder(context: Context, category: String): File {
 ```kotlin
 private fun getCustomFolderForCategory(category: String): Uri? {
     val folderUri = if (category.equals("Fuel", ignoreCase = true)) {
+        Log.d("ReceiptViewModel", "Category '$category' matched as Fuel - checking for custom Fuel folder")
         _fuelFolderUri.value
     } else {
+        Log.d("ReceiptViewModel", "Category '$category' is not Fuel - checking for custom Other folder")
         _otherFolderUri.value
     }
+    
+    if (folderUri != null) {
+        Log.d("ReceiptViewModel", "Custom folder found for category '$category': $folderUri")
+    } else {
+        Log.d("ReceiptViewModel", "No custom folder set for category '$category', will use default")
+    }
+    
     return folderUri
 }
 ```

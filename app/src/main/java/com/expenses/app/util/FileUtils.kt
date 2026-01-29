@@ -2,6 +2,7 @@ package com.expenses.app.util
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.expenses.app.data.Receipt
 import java.io.File
@@ -69,15 +70,15 @@ object FileUtils {
     fun getCategoryFolder(context: Context, category: String): File {
         val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
         val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
-            android.util.Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
+            Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
             File(baseFolder, "Fuel")
         } else {
-            android.util.Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
+            Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
             File(baseFolder, "Other")
         }
         if (!categoryFolder.exists()) {
             val created = categoryFolder.mkdirs()
-            android.util.Log.d("FileUtils", "Created folder ${categoryFolder.absolutePath}: $created")
+            Log.d("FileUtils", "Created folder ${categoryFolder.absolutePath}: $created")
         }
         return categoryFolder
     }
@@ -107,7 +108,7 @@ object FileUtils {
         customFolderUri: Uri? = null
     ): Pair<String?, String?> {
         return try {
-            android.util.Log.d("FileUtils", "Starting saveReceiptImage for category: ${receipt.category}")
+            Log.d("FileUtils", "Starting saveReceiptImage for category: ${receipt.category}")
             
             val extension = getFileExtension(sourceUri, context)
             val fileName = generateFileName(
@@ -119,28 +120,28 @@ object FileUtils {
                 description = receipt.description
             )
             
-            android.util.Log.d("FileUtils", "Generated filename: $fileName")
+            Log.d("FileUtils", "Generated filename: $fileName")
             
             // Try custom folder first if provided
             if (customFolderUri != null) {
-                android.util.Log.d("FileUtils", "Attempting to save to custom folder: $customFolderUri")
+                Log.d("FileUtils", "Attempting to save to custom folder: $customFolderUri")
                 val result = saveToCustomFolder(context, sourceUri, customFolderUri, fileName)
                 if (result != null) {
-                    android.util.Log.i("FileUtils", "Successfully saved to custom folder")
+                    Log.i("FileUtils", "Successfully saved to custom folder")
                     return result
                 }
                 // If custom folder fails, fall through to default folder
-                android.util.Log.w("FileUtils", "Failed to save to custom folder, falling back to default")
+                Log.w("FileUtils", "Failed to save to custom folder, falling back to default")
             }
             
             // Use default app folder
             val categoryFolder = getCategoryFolder(context, receipt.category)
-            android.util.Log.d("FileUtils", "Using default category folder: ${categoryFolder.absolutePath}")
+            Log.d("FileUtils", "Using default category folder: ${categoryFolder.absolutePath}")
             val destFile = File(categoryFolder, fileName)
             
             val inputStream = context.contentResolver.openInputStream(sourceUri)
             if (inputStream == null) {
-                android.util.Log.e("FileUtils", "Failed to open input stream for source URI")
+                Log.e("FileUtils", "Failed to open input stream for source URI")
                 return Pair(null, null)
             }
             
@@ -148,16 +149,16 @@ object FileUtils {
                 destFile.outputStream().use { output ->
                     val bytesCopied = input.copyTo(output)
                     if (bytesCopied == 0L) {
-                        android.util.Log.w("FileUtils", "No bytes copied from source")
+                        Log.w("FileUtils", "No bytes copied from source")
                     } else {
-                        android.util.Log.i("FileUtils", "Successfully saved $bytesCopied bytes to: ${destFile.absolutePath}")
+                        Log.i("FileUtils", "Successfully saved $bytesCopied bytes to: ${destFile.absolutePath}")
                     }
                 }
             }
             
             Pair(destFile.absolutePath, fileName)
         } catch (e: Exception) {
-            android.util.Log.e("FileUtils", "Error saving receipt image for category ${receipt.category}", e)
+            Log.e("FileUtils", "Error saving receipt image for category ${receipt.category}", e)
             e.printStackTrace()
             Pair(null, null)
         }
@@ -182,7 +183,7 @@ object FileUtils {
             // Get DocumentFile for the custom folder
             val folderDoc = DocumentFile.fromTreeUri(context, customFolderUri)
             if (folderDoc == null || !folderDoc.exists() || !folderDoc.isDirectory) {
-                android.util.Log.e("FileUtils", "Custom folder is not accessible")
+                Log.e("FileUtils", "Custom folder is not accessible")
                 return null
             }
             
@@ -192,21 +193,21 @@ object FileUtils {
             // Check if file already exists and delete it
             val existingFile = folderDoc.findFile(fileName)
             if (existingFile != null && !existingFile.delete()) {
-                android.util.Log.w("FileUtils", "Failed to delete existing file: $fileName")
+                Log.w("FileUtils", "Failed to delete existing file: $fileName")
                 // Continue anyway - createFile will handle collision by appending number
             }
             
             // Create new file in the custom folder
             val newFile = folderDoc.createFile(mimeType, fileName)
             if (newFile == null) {
-                android.util.Log.e("FileUtils", "Failed to create file in custom folder")
+                Log.e("FileUtils", "Failed to create file in custom folder")
                 return null
             }
             
             // Copy file content
             val inputStream = context.contentResolver.openInputStream(sourceUri)
             if (inputStream == null) {
-                android.util.Log.e("FileUtils", "Failed to open input stream for source")
+                Log.e("FileUtils", "Failed to open input stream for source")
                 newFile.delete()  // Clean up the created file
                 return null
             }
@@ -214,7 +215,7 @@ object FileUtils {
             inputStream.use { input ->
                 val outputStream = context.contentResolver.openOutputStream(newFile.uri)
                 if (outputStream == null) {
-                    android.util.Log.e("FileUtils", "Failed to open output stream for destination")
+                    Log.e("FileUtils", "Failed to open output stream for destination")
                     newFile.delete()  // Clean up the created file
                     return null
                 }
@@ -222,17 +223,17 @@ object FileUtils {
                 outputStream.use { output ->
                     val bytesCopied = input.copyTo(output)
                     if (bytesCopied == 0L) {
-                        android.util.Log.w("FileUtils", "No bytes copied to custom folder")
+                        Log.w("FileUtils", "No bytes copied to custom folder")
                     }
                 }
             }
             
             Pair(newFile.uri.toString(), fileName)
         } catch (e: SecurityException) {
-            android.util.Log.e("FileUtils", "Security exception accessing custom folder", e)
+            Log.e("FileUtils", "Security exception accessing custom folder", e)
             null
         } catch (e: Exception) {
-            android.util.Log.e("FileUtils", "Error saving to custom folder", e)
+            Log.e("FileUtils", "Error saving to custom folder", e)
             null
         }
     }
