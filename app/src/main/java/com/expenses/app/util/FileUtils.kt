@@ -2,6 +2,7 @@ package com.expenses.app.util
 
 import android.content.Context
 import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import com.expenses.app.data.Receipt
 import java.io.File
 import java.text.SimpleDateFormat
@@ -78,10 +79,20 @@ object FileUtils {
         return categoryFolder
     }
 
+    /**
+     * Saves a receipt image to either a custom folder (if provided) or the default app folder.
+     * 
+     * @param context Application context
+     * @param sourceUri URI of the source image to save
+     * @param receipt Receipt object containing metadata for file naming
+     * @param customFolderUri Optional custom folder URI selected by user (from DocumentTree)
+     * @return Pair of (file path/URI string, file name) or (null, null) on error
+     */
     fun saveReceiptImage(
         context: Context,
         sourceUri: Uri,
-        receipt: Receipt
+        receipt: Receipt,
+        customFolderUri: Uri? = null
     ): Pair<String?, String?> {
         return try {
             val extension = getFileExtension(sourceUri, context)
@@ -94,6 +105,17 @@ object FileUtils {
                 description = receipt.description
             )
             
+            // Try custom folder first if provided
+            if (customFolderUri != null) {
+                val result = saveToCustomFolder(context, sourceUri, customFolderUri, fileName)
+                if (result != null) {
+                    return result
+                }
+                // If custom folder fails, fall through to default folder
+                android.util.Log.w("FileUtils", "Failed to save to custom folder, falling back to default")
+            }
+            
+            // Use default app folder
             val categoryFolder = getCategoryFolder(context, receipt.category)
             val destFile = File(categoryFolder, fileName)
             
@@ -107,6 +129,60 @@ object FileUtils {
         } catch (e: Exception) {
             e.printStackTrace()
             Pair(null, null)
+        }
+    }
+    
+    /**
+     * Saves a file to a custom folder using Storage Access Framework (DocumentFile API).
+     * 
+     * @param context Application context
+     * @param sourceUri URI of the source file to save
+     * @param customFolderUri URI of the custom folder (from OpenDocumentTree)
+     * @param fileName Name for the destination file
+     * @return Pair of (document URI string, file name) or null on error
+     */
+    private fun saveToCustomFolder(
+        context: Context,
+        sourceUri: Uri,
+        customFolderUri: Uri,
+        fileName: String
+    ): Pair<String?, String?>? {
+        return try {
+            // Get DocumentFile for the custom folder
+            val folderDoc = DocumentFile.fromTreeUri(context, customFolderUri)
+            if (folderDoc == null || !folderDoc.exists() || !folderDoc.isDirectory) {
+                android.util.Log.e("FileUtils", "Custom folder is not accessible")
+                return null
+            }
+            
+            // Get MIME type from source
+            val mimeType = context.contentResolver.getType(sourceUri) ?: "image/*"
+            
+            // Check if file already exists and delete it
+            val existingFile = folderDoc.findFile(fileName)
+            existingFile?.delete()
+            
+            // Create new file in the custom folder
+            val newFile = folderDoc.createFile(mimeType, fileName)
+            if (newFile == null) {
+                android.util.Log.e("FileUtils", "Failed to create file in custom folder")
+                return null
+            }
+            
+            // Copy file content
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                context.contentResolver.openOutputStream(newFile.uri)?.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            
+            Pair(newFile.uri.toString(), fileName)
+        } catch (e: SecurityException) {
+            android.util.Log.e("FileUtils", "Security exception accessing custom folder", e)
+            null
+        } catch (e: Exception) {
+            android.util.Log.e("FileUtils", "Error saving to custom folder", e)
+            null
         }
     }
 }
