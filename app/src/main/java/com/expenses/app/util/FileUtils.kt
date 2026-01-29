@@ -69,12 +69,15 @@ object FileUtils {
     fun getCategoryFolder(context: Context, category: String): File {
         val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
         val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
+            android.util.Log.d("FileUtils", "Category '$category' matched as Fuel - using Receipts/Fuel folder")
             File(baseFolder, "Fuel")
         } else {
+            android.util.Log.d("FileUtils", "Category '$category' matched as Other - using Receipts/Other folder")
             File(baseFolder, "Other")
         }
         if (!categoryFolder.exists()) {
-            categoryFolder.mkdirs()
+            val created = categoryFolder.mkdirs()
+            android.util.Log.d("FileUtils", "Created folder ${categoryFolder.absolutePath}: $created")
         }
         return categoryFolder
     }
@@ -104,6 +107,8 @@ object FileUtils {
         customFolderUri: Uri? = null
     ): Pair<String?, String?> {
         return try {
+            android.util.Log.d("FileUtils", "Starting saveReceiptImage for category: ${receipt.category}")
+            
             val extension = getFileExtension(sourceUri, context)
             val fileName = generateFileName(
                 date = receipt.receiptDate,
@@ -114,10 +119,14 @@ object FileUtils {
                 description = receipt.description
             )
             
+            android.util.Log.d("FileUtils", "Generated filename: $fileName")
+            
             // Try custom folder first if provided
             if (customFolderUri != null) {
+                android.util.Log.d("FileUtils", "Attempting to save to custom folder: $customFolderUri")
                 val result = saveToCustomFolder(context, sourceUri, customFolderUri, fileName)
                 if (result != null) {
+                    android.util.Log.i("FileUtils", "Successfully saved to custom folder")
                     return result
                 }
                 // If custom folder fails, fall through to default folder
@@ -126,6 +135,7 @@ object FileUtils {
             
             // Use default app folder
             val categoryFolder = getCategoryFolder(context, receipt.category)
+            android.util.Log.d("FileUtils", "Using default category folder: ${categoryFolder.absolutePath}")
             val destFile = File(categoryFolder, fileName)
             
             val inputStream = context.contentResolver.openInputStream(sourceUri)
@@ -139,12 +149,15 @@ object FileUtils {
                     val bytesCopied = input.copyTo(output)
                     if (bytesCopied == 0L) {
                         android.util.Log.w("FileUtils", "No bytes copied from source")
+                    } else {
+                        android.util.Log.i("FileUtils", "Successfully saved $bytesCopied bytes to: ${destFile.absolutePath}")
                     }
                 }
             }
             
             Pair(destFile.absolutePath, fileName)
         } catch (e: Exception) {
+            android.util.Log.e("FileUtils", "Error saving receipt image for category ${receipt.category}", e)
             e.printStackTrace()
             Pair(null, null)
         }
