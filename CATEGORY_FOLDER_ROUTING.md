@@ -7,9 +7,9 @@ This document describes the implementation of category-based folder routing for 
 
 ### Default Folder Structure
 ```
-Receipts/
-├── Fuel/          # For receipts with category "Fuel" (case-insensitive)
-└── Other/         # For all other categories
+Documents/
+├── Fuel Receipts/          # For receipts with category "Fuel" (case-insensitive)
+└── Expenses Receipts/      # For all other categories
 ```
 
 ### Custom Folder Support
@@ -24,13 +24,13 @@ Users can optionally select custom folders for each category type:
 
 ```kotlin
 fun getCategoryFolder(context: Context, category: String): File {
-    val baseFolder = File(context.getExternalFilesDir(null), "Receipts")
+    val baseFolder = File(context.getExternalFilesDir(null), "Documents")
     val categoryFolder = if (category.equals("Fuel", ignoreCase = true)) {
         Log.d("FileUtils", "Category '$category' matched as Fuel - using Documents/Fuel Receipts folder")
-        File(baseFolder, "Fuel")
+        File(baseFolder, "Fuel Receipts")
     } else {
         Log.d("FileUtils", "Category '$category' matched as Other - using Documents/Expenses Receipts folder")
-        File(baseFolder, "Other")
+        File(baseFolder, "Expenses Receipts")
     }
     if (!categoryFolder.exists()) {
         val created = categoryFolder.mkdirs()
@@ -42,7 +42,7 @@ fun getCategoryFolder(context: Context, category: String): File {
 
 **Key Features:**
 - Case-insensitive matching: "Fuel", "fuel", "FUEL", "FuEl" all match as Fuel
-- All other categories (Food, Travel, Entertainment, Office Supplies, etc.) go to "Other"
+- All other categories (Food, Travel, Entertainment, Office Supplies, etc.) go to "Expenses Receipts"
 - Automatically creates folders if they don't exist
 
 ### 2. Custom Folder Selection (`ReceiptViewModel.getCustomFolderForCategory()`)
